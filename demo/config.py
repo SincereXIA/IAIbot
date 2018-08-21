@@ -2,7 +2,8 @@ import re
 
 from none.default_config import *
 
-HOST = '0.0.0.0'
+HOST = '127.0.0.1'
+PORT = '8084'
 SECRET = 'abc'
 
 SUPERUSERS = {1002647525}
