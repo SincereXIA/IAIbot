@@ -1,6 +1,4 @@
 import none
-import none.command
-from none import on_command,CommandSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 async def test():
