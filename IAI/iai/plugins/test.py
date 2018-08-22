@@ -1,10 +1,13 @@
 import none
 import none.command
 from none import on_command,CommandSession
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-@on_command('test')
-async def test(session:CommandSession):
-    ctx = {'message_type': 'private', 'post_type': 'message', 'raw_message': 'weather', 'self_id': 3316564517, 'sub_type': 'friend', 'time': 1534834232, 'user_id': 937734121}
-    await none.command.call_command(none.get_bot(),ctx,)
+async def test():
+    ctx = {'message_type': 'private', 'self_id': 3316564517, 'user_id': 937734121}
+    await none.command.call_command(none.get_bot(),ctx,"weather", args={"city":"西安"})
 
 
+scheduler = AsyncIOScheduler()
+#scheduler.add_job(test, 'interval', seconds=15)
+#scheduler.start()
