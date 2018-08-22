@@ -5,7 +5,7 @@ from datetime import datetime
 from IAI.setup import *
 
 
-@on_command('kcb', aliases=('课程表','课程'))
+@on_command('kcb', aliases=('课程表','课程'),only_to_me=False)
 async def CurriculumSchedule(session: CommandSession):
     localtime = datetime.now()
     curriculumStart = datetime(2018,9,3) # todo 自定义设置
@@ -74,12 +74,15 @@ async def ClassInfo(week,weekday,group_id,classnum,next_class = False):
         info = getRecentClassInfo(datetime.now(),group_id)
     else:
         info = getClassInfo(week, weekday, group_id,classnum)
-    result = f'''
+    if info:
+        result = f'''
 ☘️
-第 {classnum} 节
+第 {info.class_num} 节
 【{info.class_name}】
 👉 地点： {info.place}
 ☕   教师：{info.teacher}
-    '''.strip()
+        '''.strip()
+    else:
+        result = "没有找到有关的课程信息哦"
     return str(result)
 

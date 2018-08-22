@@ -1,6 +1,6 @@
 # 导入:
 from IAI.setup import *
-from sqlalchemy import Integer, Column, String, create_engine, Time, VARCHAR
+from sqlalchemy import Integer, Column, String, create_engine, Time, VARCHAR,Date
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime,timedelta,time
@@ -24,9 +24,10 @@ class Curriculum(Base):
     end_week = Column(Integer)
     start_time = Column(Time)
     group_id = Column(Integer)
+    last_notify_date = Column(Date)
 
 
-def getClassInfo(week, weekday,group_id, classnum):
+def getClassInfo(week, weekday,group_id, classnum)->Curriculum:
     session = DBSession()
     curriculum = session.query(Curriculum).filter(
         Curriculum.group_id == group_id,
@@ -49,18 +50,14 @@ def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
     # 获取当前周
     localtime = datetime.now()
     curriculumStart = datetime(2018,9,3)
-    day = int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j"))
-    if day >= 0:
-        week = day % 7
-    else:
-        week = day % -7
+    week = (int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j")))//7
 
     #数据库
     session = DBSession()
     curriculums = session.query(Curriculum).order_by(Curriculum.class_num).\
         filter(
         Curriculum.group_id == group_id,
-        Curriculum.weekday == localtime.weekday(),
+        Curriculum.weekday == localtime.weekday()+1,
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
     )
@@ -84,9 +81,14 @@ def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
                 (localtime+timedelta(minutes = timeLimit)).strftime("%H%M%S"):
                     result.append(curriculum)
                     continue
+                else:
+                    continue
             result.append(curriculum)
 
-    return result[0]
+    if result:
+        return result[0]
+    else:
+        return result
 
 
 
