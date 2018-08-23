@@ -117,11 +117,9 @@ def load_plugins(plugin_dir: str, module_prefix: str) -> None:
             continue
 
         mod_name = f'{module_prefix}.{m.group(1)}'
-        try:
-            _plugins.add(importlib.import_module(mod_name))
-            logger.info(f'Succeeded to import "{mod_name}"')
-        except ImportError:
-            logger.warning(f'Failed to import "{mod_name}"')
+        _plugins.add(importlib.import_module(mod_name))
+        logger.info(f'Succeeded to import "{mod_name}"')
+
 
 
 def load_builtin_plugins() -> None:
