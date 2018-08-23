@@ -14,7 +14,8 @@ setup(
     description='An asynchronous QQ bot framework based on CoolQ.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    install_requires=['aiocqhttp>=0.6', 'aiocache>=0.10', 'apscheduler', 'sqlalchemy', 'baidu-aip', 'jieba', 'requests'],
+    install_requires=['aiocqhttp>=0.6', 'aiocache>=0.10', 'apscheduler', 'sqlalchemy', 'baidu-aip', 'jieba', 'requests',
+                      'mysql-connector'],
     python_requires='>=3.6',
     platforms='any',
     classifiers=(

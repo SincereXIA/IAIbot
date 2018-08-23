@@ -5,7 +5,9 @@ from none import  on_command, CommandSession
 from none import on_natural_language, NLPSession, NLPResult
 from .data_source import get_weather_of_city, get_weather_of_city_HF
 from jieba import posseg
-import IAI.nlp
+import nlp
+import sys
+print(sys.path)
 
 @on_command('weather', aliases=('天气',))
 async def weather(session: CommandSession):
