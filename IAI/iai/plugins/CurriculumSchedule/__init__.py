@@ -25,15 +25,12 @@ async def CurriculumSchedule(session: CommandSession):
         else:
             session.args['week'] = day % -7
 
-    next_class = False
-    if 'next_class' in session.args.keys():
-        next_class = True
     if 'group_id' not in session.ctx.keys():
         group_id = DEFAULT_GROUP
     else:
         group_id = session.ctx['group_id']
 
-    result += await ClassesInfo(**session.args, group_id=group_id, next_class=next_class)
+    result += await ClassesInfo(**session.args, group_id=group_id,)
     await session.send(result)
 
 

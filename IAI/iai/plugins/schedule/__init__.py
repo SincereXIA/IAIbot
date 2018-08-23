@@ -13,7 +13,7 @@ async def Curriculum():
         classInfo = data_source.getRecentClassInfo(now,group,20)
         if not classInfo:
             return
-        if classInfo.last_notify_date.day != now.day:
+        if classInfo.last_notify_date is None or classInfo.last_notify_date.day != now.day:
             ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id':group}
             await none.command.call_command(none.get_bot(), ctx, "kcb", args={"next_class": True})
             notify_date = date(now.year, now.month, now.day)
@@ -25,5 +25,5 @@ async def Curriculum():
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(Curriculum, 'interval', seconds=15)
+scheduler.add_job(Curriculum, 'interval', seconds=5)
 scheduler.start()
