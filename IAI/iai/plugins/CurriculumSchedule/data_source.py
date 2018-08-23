@@ -27,24 +27,21 @@ class Curriculum(Base):
     last_notify_date = Column(Date)
 
 
-def getClassInfo(week, weekday,group_id, classnum)->Curriculum:
+def getClassInfo(week, weekday,group_id, classnums)->list:
     session = DBSession()
-    curriculum = session.query(Curriculum).filter(
-        Curriculum.group_id == group_id,
-        Curriculum.weekday == weekday+1,
-        Curriculum.begin_week <= week,
-        Curriculum.end_week >= week,
-        Curriculum.class_num == classnum
-    ).first()
+    curriculums = []
+    for classnum in classnums:
+        rs = session.query(Curriculum).filter(
+            Curriculum.group_id == group_id,
+            Curriculum.weekday == weekday+1,
+            Curriculum.begin_week <= week,
+            Curriculum.end_week >= week,
+            Curriculum.class_num == classnum
+        ).first()
+        if rs is not None:
+            curriculums.append(rs)
     session.close()
-    info = {}
-    info['subject'] = "微机原理"
-    info['teacher'] = "张俊华"
-    info['place'] = "C417"
-    info['start_time'] = "18:00"
-    info['end_time'] = "19:30"
-    info['other'] = ""
-    return curriculum
+    return curriculums
 
 def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
     # 获取当前周

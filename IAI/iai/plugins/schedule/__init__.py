@@ -7,8 +7,11 @@ import none.command
 from none import on_command,CommandSession
 from IAI import DBdriver
 
+times = 0
 async def Curriculum():
     now = datetime.now()
+    global  times
+    times += 1
     for group in CURRICULUM_ENABLE_GROUP_LIST:
         classInfo = data_source.getRecentClassInfo(now,group,20)
         if not classInfo:
@@ -24,6 +27,7 @@ async def Curriculum():
             session.close()
 
 
+
 scheduler = AsyncIOScheduler()
-scheduler.add_job(Curriculum, 'interval', seconds=5)
+scheduler.add_job(Curriculum, 'interval', seconds=1)
 scheduler.start()

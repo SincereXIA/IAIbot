@@ -1,8 +1,9 @@
-from none import on_command, command
+from none import on_command, command,on_natural_language, NLPSession, NLPResult
 from none import session, CommandSession
 from .data_source import getClassInfo, getRecentClassInfo
 from datetime import datetime
 from IAI.setup import *
+from IAI.nlp.curriculum_nlp import curriculum_nlp
 
 
 @on_command('kcb', aliases=('课程表', '课程'), only_to_me=False)
@@ -20,17 +21,14 @@ async def CurriculumSchedule(session: CommandSession):
         session.args['weekday'] = localtime.weekday()
     if 'week' not in session.args.keys():
         day = int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j"))
-        if day >= 0:
-            session.args['week'] = day % 7
-        else:
-            session.args['week'] = day % -7
+        session.args['week'] = day // 7
 
     if 'group_id' not in session.ctx.keys():
         group_id = DEFAULT_GROUP
     else:
         group_id = session.ctx['group_id']
 
-    result += await ClassesInfo(**session.args, group_id=group_id,)
+    result += await ClassInfo(**session.args, group_id=group_id,)
     await session.send(result)
 
 
@@ -52,7 +50,7 @@ async def ClassesInfo(week, weekday, group_id, classnum=None, next_class=False):
     '''
     if next_class:
         result += await ClassInfo(week, weekday, group_id, classnum, next_class)
-    elif classnum:
+    elif type(classnum) == int:
         result += await ClassInfo(week, weekday, group_id, classnum)
     else:
         for i in range(5):
@@ -61,13 +59,17 @@ async def ClassesInfo(week, weekday, group_id, classnum=None, next_class=False):
     return str(result)
 
 
-async def ClassInfo(week, weekday, group_id, classnum, next_class=False):
+async def ClassInfo(week, weekday, group_id, classnums = None, next_class=False):
+    if classnums is None:
+        classnums = [1,2,3,4]
     if next_class:
-        info = getRecentClassInfo(datetime.now(), group_id)
+        infos = [getRecentClassInfo(datetime.now(), group_id)]
     else:
-        info = getClassInfo(week, weekday, group_id, classnum)
-    if info:
-        result = f'''
+        infos = getClassInfo(week, weekday, group_id, classnums)
+    result = ""
+    if infos :
+        for info in infos:
+            result += f'''
 ☘️
 第 {info.class_num} 节
 【{info.class_name}】
@@ -75,5 +77,16 @@ async def ClassInfo(week, weekday, group_id, classnum, next_class=False):
 ☕   教师：{info.teacher}
         '''.strip()
     else:
-        result = "没有找到有关的课程信息哦"
+        result += "没有找到有关的课程信息哦"
     return str(result)
+
+@on_natural_language({'课'},only_to_me= False)
+async def _(session: NLPSession):
+    args = await curriculum_nlp(session.msg_text)
+    await session.send(f'''NLP DEBUG_INFO:{args['debug_info']}+  SCORE:{args['score']}''')
+    if args['score']>= 0.7:
+        args.pop('debug_info')
+        args.pop('score')
+        return NLPResult(90,'kcb',args)
+    else:
+        return None
