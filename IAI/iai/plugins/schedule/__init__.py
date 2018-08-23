@@ -14,7 +14,7 @@ async def Curriculum():
         if not classInfo:
             return
         if classInfo.last_notify_date.day != now.day:
-            ctx = {'message_type': 'group', 'self_id': 3316564517, 'group_id':group}
+            ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id':group}
             await none.command.call_command(none.get_bot(), ctx, "kcb", args={"next_class": True})
             notify_date = date(now.year, now.month, now.day)
             classInfo.last_notify_date = notify_date

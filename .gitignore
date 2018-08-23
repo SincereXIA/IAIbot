@@ -244,3 +244,4 @@ typings/
 # ----- Project -----
 
 .idea/deployment.xml
+IAI/setup.py
