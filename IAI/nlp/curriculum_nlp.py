@@ -13,7 +13,7 @@ async def curriculum_nlp(text):
     result['debug_info'] = ""
     for item in nrs['items']:
         if item['ne'] == 'TIME':
-            result['debug_info'] += str(item['ne'])
+            result['debug_info'] += str(item)
             for word in item['basic_words']:
                 if '明' in word:
                     result['weekday'] = (result['weekday']+1)%7
@@ -28,5 +28,6 @@ async def curriculum_nlp(text):
             result['next_class'] = True
         result['classnums'] = [1,2,3,4]
 
-    result['score'] = client.simnet(text,"上什么课")['score']
+    result['score'] = client.simnet(text,"要上什么课")['score']
     return result
+

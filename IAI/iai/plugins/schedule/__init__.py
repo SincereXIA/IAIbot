@@ -4,7 +4,6 @@ from datetime import datetime,date
 from IAI.setup import *
 import none
 import none.command
-from none import on_command,CommandSession
 from IAI import DBdriver
 
 times = 0
@@ -29,5 +28,5 @@ async def Curriculum():
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(Curriculum, 'interval', seconds=1)
+scheduler.add_job(Curriculum, 'interval', minutes=1)
 scheduler.start()

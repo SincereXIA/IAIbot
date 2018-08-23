@@ -44,6 +44,14 @@ async def get_weather_of_city_HF(city:str)->str:
         s = e
     return str(s)
 
+async def get_forecast(city:str):
+    pass
+    #todo 获取预报信息
+
+async def should_forecast(city:str,group):
+    pass
+    #todo 判断是否需要预报
+
 def daily_foreast(results):
     daily = results['daily_forecast'][0]
     try:

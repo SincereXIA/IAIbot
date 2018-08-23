@@ -1,13 +1,10 @@
 # coding=utf-8
 
 
-from none import  on_command, CommandSession
+from none import  on_command, CommandSession,get_bot
 from none import on_natural_language, NLPSession, NLPResult
-from .data_source import get_weather_of_city, get_weather_of_city_HF
+from .data_source import get_weather_of_city, get_weather_of_city_HF,should_forecast,get_forecast
 from jieba import posseg
-import nlp
-import sys
-print(sys.path)
 
 @on_command('weather', aliases=('天气',))
 async def weather(session: CommandSession):
@@ -16,6 +13,13 @@ async def weather(session: CommandSession):
     ather_report = await get_weather_of_city_HF(city)
 
     await session.send(ather_report)
+@on_command('weather_forecast')
+async def weather_forecast(session:CommandSession):
+    bot = get_bot()
+    if should_forecast(bot.config.DEFAULT_CITY):
+        pass
+
+
 
 @weather.args_parser
 async def _(session: CommandSession):
