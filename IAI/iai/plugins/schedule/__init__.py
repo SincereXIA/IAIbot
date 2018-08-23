@@ -4,7 +4,6 @@ from datetime import datetime,date
 from IAI.setup import *
 import none
 import none.command
-from none import on_command,CommandSession
 from IAI import DBdriver
 
 times = 0
