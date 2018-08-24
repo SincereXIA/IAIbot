@@ -23,22 +23,31 @@ class Homework(Base):
     add_by = Column(VARCHAR)
 
 
-async def get_homework_info(group_id, date: date, subject_name=None):
+async def get_homework_info(group_id, date: date, subjects = None):
     like_str = ""
-    if subject_name is not None:
-        for c in subject_name:
-            like_str += f'%{c}'
-    like_str += '%'
-
     session = DBSession()
-    results = session.query(Homework).filter(
-        Homework.group_id == group_id,
-        Homework.added_date <= date,
-        Homework.end_date >= date,
-        Homework.subject_name.like(like_str)
-    ).all()
+    results = []
+    if subjects:
+        for subject in subjects:
+            for c in subject:
+                like_str += f'%{c}'
+                like_str += '%'
+            results.extend(session.query(Homework).filter(
+                Homework.group_id == group_id,
+                Homework.added_date <= date,
+                Homework.end_date >= date,
+                Homework.subject_name.like(like_str)
+            ).all())
+    else:
+        results.extend(session.query(Homework).filter(
+            Homework.group_id == group_id,
+            Homework.added_date <= date,
+            Homework.end_date >= date,
+        ).all())
+
     session.close()
-    return results
+
+    return set([i for i in results])
 
 
 async def add_homework_info(group_id, subject_name, content, end_date,
