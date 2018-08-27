@@ -12,18 +12,22 @@ async def Curriculum():
     global  times
     times += 1
     for group in CURRICULUM_ENABLE_GROUP_LIST:
-        classInfo = data_source.getRecentClassInfo(now,group,20)
-        if not classInfo:
+        classInfos = data_source.getRecentClassInfo(now,group,20)
+        if not classInfos:
             return
-        if classInfo.last_notify_date is None or classInfo.last_notify_date.day != now.day:
-            ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id':group}
+        should_notify = False
+        for classInfo in classInfos:
+            if classInfo.last_notify_date is None or classInfo.last_notify_date.day != now.day:
+                should_notify = True
+                notify_date = date(now.year, now.month, now.day)
+                classInfo.last_notify_date = notify_date
+                session = DBdriver.DBSession()
+                session.merge(classInfo)
+                session.commit()
+                session.close()
+        if should_notify:
+            ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
             await none.command.call_command(none.get_bot(), ctx, "kcb", args={"next_class": True})
-            notify_date = date(now.year, now.month, now.day)
-            classInfo.last_notify_date = notify_date
-            session = DBdriver.DBSession()
-            session.merge(classInfo)
-            session.commit()
-            session.close()
 
 
 

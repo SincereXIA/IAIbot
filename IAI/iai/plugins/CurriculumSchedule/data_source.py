@@ -4,7 +4,6 @@ from sqlalchemy import Integer, Column, String, create_engine, Time, VARCHAR,Dat
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime,timedelta,time
-import time
 # 创建对象的基类:
 Base = declarative_base()
 # 定义User对象:
@@ -15,6 +14,7 @@ class Curriculum(Base):
     # 表的结构:
     id = Column(Integer, primary_key=True)
     class_name = Column(VARCHAR(100))
+    group_name = Column(VARCHAR(100))
     class_num = Column(Integer)
     weekday = Column(Integer)
     place = Column(VARCHAR(100))
@@ -37,13 +37,28 @@ def getClassInfo(week, weekday,group_id, classnums)->list:
             Curriculum.begin_week <= week,
             Curriculum.end_week >= week,
             Curriculum.class_num == classnum
-        ).first()
+        ).all()
         if rs is not None:
-            curriculums.append(rs)
+            for r in rs:
+                curriculums.append(r)
+    #为未定义课程时间生成时间
+    # 获取当前周
+    localtime = datetime.now()
+    # 为未定义课程时间生成时间
+    summer_time = [time(8,30), time(10,25), time(14,30), time(16,25), time(19,00), ]
+    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(16, 55), time(18, 30),]
+
+
+    for curriculum in curriculums:
+        if not curriculum.start_time:
+            if localtime.month < 10:
+                curriculum.start_time = summer_time[int(curriculum.class_num)-1]
+            else:
+                curriculum.start_time = winter_time[int(curriculum.class_num)-1]
     session.close()
     return curriculums
 
-def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
+def getRecentClassInfo(recent_time:datetime, group_id, timeLimit = None):
     # 获取当前周
     localtime = datetime.now()
     curriculumStart = datetime(2018,9,3)
@@ -60,14 +75,16 @@ def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
     )
     session.close()
 
-    #为未定义课程时间生成时间
-    summer_time = ['8:30','10:25','14:30','16:25']
-    for item in summer_time:
-        item = time.strptime(item,'%H:%M')
+    # 为未定义课程时间生成时间
+    summer_time = [time(8, 30), time(10, 25), time(14, 30), time(16, 25), time(19, 00), ]
+    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(16, 55), time(18, 30), ]
+
     for curriculum in curriculums:
         if not curriculum.start_time:
-            curriculum.start_time = summer_time[int(curriculum.class_num)]
-            #todo 夏令时和冬令时
+            if localtime.month < 10:
+                curriculum.start_time = summer_time[int(curriculum.class_num)-1]
+            else:
+                curriculum.start_time = winter_time[int(curriculum.class_num)-1]
 
     # 筛选
     result =[]
@@ -82,10 +99,7 @@ def getRecentClassInfo(time:datetime, group_id, timeLimit = None):
                     continue
             result.append(curriculum)
 
-    if result:
-        return result[0]
-    else:
-        return result
+    return result
 
 
 

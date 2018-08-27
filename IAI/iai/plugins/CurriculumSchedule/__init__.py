@@ -1,5 +1,5 @@
 from none import on_command, command,on_natural_language, NLPSession, NLPResult
-from none import session, CommandSession
+from none import session, CommandSession,get_bot
 from .data_source import getClassInfo, getRecentClassInfo
 from datetime import datetime
 from IAI.setup import *
@@ -61,29 +61,30 @@ async def ClassesInfo(week, weekday, group_id, classnum=None, next_class=False):
 
 async def ClassInfo(week, weekday, group_id, classnums = None, next_class=False):
     if classnums is None:
-        classnums = [1,2,3,4]
+        classnums = [1,2,3,4,5]
     if next_class:
-        infos = [getRecentClassInfo(datetime.now(), group_id)]
+        infos = getRecentClassInfo(datetime.now(), group_id, timeLimit=20)
     else:
         infos = getClassInfo(week, weekday, group_id, classnums)
-    result = ""
+    result = ''
     if infos :
         for info in infos:
             result += f'''
-☘️
-第 {info.class_num} 节
-【{info.class_name}】
-👉 地点： {info.place}
-☕   教师：{info.teacher}
-        '''.strip()
+┌────
+│    第 {info.class_num} 节
+│    【{info.class_name}】
+│    地点： {info.place}
+│    教师：{info.teacher}
+│    时间：{info.start_time.strftime('%H:%M')}
+        '''
     else:
         result += "没有找到有关的课程信息哦"
     return str(result)
 
-@on_natural_language({'课'},only_to_me= False)
+@on_natural_language({'课'},only_to_me= False, only_short_message=True)
 async def _(session: NLPSession):
     args = await curriculum_nlp(session.msg_text)
-    await session.send(f'''NLP DEBUG_INFO:{args['debug_info']}+  SCORE:{args['score']}''')
+    #await session.send(f'''NLP DEBUG_INFO:{args['debug_info']}+  SCORE:{args['score']}''')
     if args['score']>= 0.7:
         args.pop('debug_info')
         args.pop('score')
