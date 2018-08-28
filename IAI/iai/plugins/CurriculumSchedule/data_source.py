@@ -9,7 +9,7 @@ Base = declarative_base()
 # 定义User对象:
 class Curriculum(Base):
     # 表的名字:
-    __tablename__ = 'CurriculumSchedule'
+    __tablename__ = 'curriculumschedule'
 
     # 表的结构:
     id = Column(Integer, primary_key=True)
