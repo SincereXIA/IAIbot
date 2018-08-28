@@ -1,0 +1,50 @@
+import none
+from none import session, CommandSession, on_command, get_bot
+from . import data_source, message
+from IAI.iai.plugins.weather.data_source import get_today_weather_info
+from datetime import datetime
+
+
+@on_command('morning_call')
+async def one(session: CommandSession):
+    DEFAULT_CITY = get_bot().config.DEFAULT_CITY
+    if 'city' not in session.args.keys():
+        session.args['city'] = DEFAULT_CITY
+    weather = await get_today_weather_info(session.args['city'])
+
+    one = await one_msg()
+
+    class_info = ""
+    weekday = ['一','二','三','四','五','六','日']
+    date = datetime.now().strftime("%m ")+'月'+datetime.now().strftime(" %d")
+    msg = message.morningcall_msg.format(
+        **{'date': date,
+           'weekday': weekday[datetime.now().weekday()],
+           'weather': weather['cond_d'],
+           'tmp_max': weather['tmp_max'],
+           'tmp_min': weather['tmp_min'],
+           'class': class_info,
+           'comf': weather['comf'],
+           'drsg':weather['drsg'],
+           'one': one,
+           })
+    await session.send(msg)
+
+
+@on_command('one')
+async def one(session: CommandSession):
+    data = await data_source.get_one_content()
+    msg = f'''
+    {data['text']}
+    —— {data['info']}
+    '''
+    await session.send(msg)
+
+
+async def one_msg():
+    data = await data_source.get_one_content()
+    msg = f'''
+    {data['text']}
+    —— {data['info']}
+        '''
+    return msg
