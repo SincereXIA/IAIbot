@@ -14,9 +14,17 @@ async def one(session: CommandSession):
 
     one = await one_msg()
 
-    class_info = ""
     weekday = ['一','二','三','四','五','六','日']
     date = datetime.now().strftime("%m ")+'月'+datetime.now().strftime(" %d")
+
+    class_info = "今天的课程有："
+    classes = await data_source.get_today_class_info(session.ctx['group_id'])
+    for c in classes:
+        class_info += message.morningcall_class_msg.format(
+            class_num=c['class_num'],
+            class_name=c['class_name']
+        )
+
     msg = message.morningcall_msg.format(
         **{'date': date,
            'weekday': weekday[datetime.now().weekday()],
@@ -44,7 +52,7 @@ async def one(session: CommandSession):
 async def one_msg():
     data = await data_source.get_one_content()
     msg = f'''
-    {data['text']}
+    「{data['text']}」
     —— {data['info']}
         '''
     return msg

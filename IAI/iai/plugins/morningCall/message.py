@@ -8,3 +8,6 @@ morningcall_msg = '''
 
 {one}
 '''
+
+morningcall_class_msg = '''
+第 {class_num} 节：{class_name}'''
