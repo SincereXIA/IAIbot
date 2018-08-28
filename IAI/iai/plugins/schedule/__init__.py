@@ -30,7 +30,13 @@ async def Curriculum():
             await none.command.call_command(none.get_bot(), ctx, "kcb", args={"next_class": True})
 
 
+async def MorningCall():
+    for group in MORNING_CALL_ENABLE_GROUP_LIST:
+        ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
+        await none.command.call_command(none.get_bot(), ctx, "morning_call", )
+
 
 scheduler = AsyncIOScheduler()
 scheduler.add_job(Curriculum, 'interval', minutes=1)
+scheduler.add_job(MorningCall, 'cron', day_of_week='mon-fri', hour=7, minute=00,)
 scheduler.start()
