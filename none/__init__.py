@@ -9,6 +9,12 @@ from aiocqhttp import CQHttp
 from aiocqhttp.message import Message
 
 from .log import logger
+from .scheduler import Scheduler
+
+if Scheduler:
+    scheduler = Scheduler()
+else:
+    scheduler = None
 
 
 class NoneBot(CQHttp):
@@ -66,10 +72,15 @@ def init(config_object: Any = None) -> None:
     """
     global _bot
     _bot = NoneBot(config_object)
+
     if _bot.config.DEBUG:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
+
+    if scheduler and not scheduler.running:
+        scheduler.configure(_bot.config.APSCHEDULER_CONFIG)
+        scheduler.start()
 
 
 def get_bot() -> NoneBot:
@@ -117,9 +128,11 @@ def load_plugins(plugin_dir: str, module_prefix: str) -> None:
             continue
 
         mod_name = f'{module_prefix}.{m.group(1)}'
-        _plugins.add(importlib.import_module(mod_name))
-        logger.info(f'Succeeded to import "{mod_name}"')
-
+        try:
+            _plugins.add(importlib.import_module(mod_name))
+            logger.info(f'Succeeded to import "{mod_name}"')
+        except ImportError:
+            logger.warning(f'Failed to import "{mod_name}"')
 
 
 def load_builtin_plugins() -> None:

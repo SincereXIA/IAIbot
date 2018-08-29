@@ -30,18 +30,7 @@ COMMAND_SEP = {'/', '.'}
 SESSION_EXPIRE_TIMEOUT = timedelta(minutes=5)
 SESSION_RUNNING_EXPRESSION = '您有命令正在执行，请稍后再试'
 SHORT_MESSAGE_MAX_LENGTH = 50
-BD_API_KEY = ''
-BD_SECRET_KEY = ''
-HF_WEATHER_KEY = ''
 
-DB_TABLE = 'iaibot'
-DB_USER = 'root'
-DB_PASSWORD = ''
-DB_PORT = 3306
-DB_ADDRESS = '127.0.0.1'
-DEFAULT_GROUP = None
-ROBOT_ID = None
-OPEN_DO_YOU_KNOW = False
-
-CURRICULUM_ENABLE_GROUP_LIST = []
-DEFAULT_CITY = '西安'
+APSCHEDULER_CONFIG = {
+    'apscheduler.timezone': 'Asia/Shanghai'
+}
