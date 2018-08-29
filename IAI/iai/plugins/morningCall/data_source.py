@@ -27,6 +27,7 @@ async def get_today_class_info(group_id):
         i = {}
         i['class_num'] = class_num[full_info.class_num-1]
         i['class_name'] = full_info.class_name
+        i['group_name'] = full_info.group_name
         info.append(i)
 
     return info

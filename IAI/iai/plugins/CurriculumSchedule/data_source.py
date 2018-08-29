@@ -46,7 +46,7 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
         or_(*[Curriculum.class_num == i for i in classnums])
-    ).order_by(Curriculum.group_name).all()
+    ).order_by(Curriculum.group_name).order_by(Curriculum.class_num).all()
     session.close()
     if rs is not None:
         for r in rs:

@@ -1,18 +1,22 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from IAI.iai.plugins.CurriculumSchedule import data_source
-from datetime import datetime,date
+from datetime import datetime, date
 from IAI.setup import *
 import none
 import none.command
 from IAI import DBdriver
-
+import time
+import random
 times = 0
+
+
 async def Curriculum():
     now = datetime.now()
-    global  times
+    global times
     times += 1
     for group in CURRICULUM_ENABLE_GROUP_LIST:
-        classInfos = await data_source.getRecentClassInfo(now,group,30)
+        time.sleep(random.randint(2,6))
+        classInfos = await data_source.getRecentClassInfo(now, group, 30)
         if not classInfos:
             return
         should_notify = False
@@ -28,7 +32,7 @@ async def Curriculum():
         if should_notify:
             ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
             await none.command.call_command(none.get_bot(), ctx, "kcb",
-                                            args={"next_class": True, 'from_schedule':True})
+                                            args={"next_class": True, 'from_schedule': True})
 
 
 async def MorningCall():
@@ -39,5 +43,5 @@ async def MorningCall():
 
 scheduler = AsyncIOScheduler()
 scheduler.add_job(Curriculum, 'interval', minutes=5)
-scheduler.add_job(MorningCall, 'cron', day_of_week='mon-fri', hour=7, minute=00,)
+scheduler.add_job(MorningCall, 'cron', day_of_week='mon-fri', hour=7, minute=00, )
 scheduler.start()

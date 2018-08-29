@@ -14,12 +14,16 @@ async def one(session: CommandSession):
 
     one = await one_msg()
 
-    weekday = ['一','二','三','四','五','六','日']
-    date = datetime.now().strftime("%m ")+'月'+datetime.now().strftime(" %d")
+    weekday = ['一', '二', '三', '四', '五', '六', '日']
+    date = datetime.now().strftime("%m ") + '月' + datetime.now().strftime(" %d")
 
     class_info = "今天的课程有："
     classes = await data_source.get_today_class_info(session.ctx['group_id'])
+    group_name = ""
     for c in classes:
+        if c['group_name'] != group_name:
+            group_name = c['group_name']
+            class_info += f'\n---\n{group_name}'
         class_info += message.morningcall_class_msg.format(
             class_num=c['class_num'],
             class_name=c['class_name']
@@ -33,7 +37,7 @@ async def one(session: CommandSession):
            'tmp_min': weather['tmp_min'],
            'class': class_info,
            'comf': weather['comf'],
-           'drsg':weather['drsg'],
+           'drsg': weather['drsg'],
            'one': one,
            })
     await session.send(msg)

@@ -19,7 +19,7 @@ async def CurriculumSchedule(session: CommandSession):
     if 'weekday' not in session.args.keys():
         session.args['weekday'] = localtime.weekday()
     if 'week' not in session.args.keys():
-        await get_session_week(localtime)
+        session.args['week'] = get_session_week(localtime)
 
     if 'group_id' not in session.ctx.keys():
         group_id = DEFAULT_GROUP
@@ -51,22 +51,28 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
         infos = getClassInfo(week, weekday, group_id, classnums)
     result = ''
     class_num = ['1-2', '3-4', '5-6', '7-8', '9-10']
+    group_name = ""
     if infos :
         for info in infos:
-            result += f'''
-┌───    {info.group_name}
-│    第 {class_num[info.class_num-1]} 节
+            if info.group_name != group_name and group_name != "":
+                result += f'''
+└───  '''
+            if info.group_name != group_name:
+                group_name = info.group_name
+                result += f'''
+┌───    {info.group_name}'''
+            result+=f'''
+│    ☛ 第 {class_num[info.class_num-1]} 节
 │    【{info.class_name}】
 │    地点： {info.place}
 │    教师：{info.teacher}
-│    时间：{info.start_time.strftime('%H:%M')}
-        '''
+│    时间：{info.start_time.strftime('%H:%M')}'''
     else:
         result += "没有找到有关的课程信息哦"
 
     if get_bot().config.OPEN_DO_YOU_KNOW:
         result += f'''
---------
+└───  
 {await do_you_know()}'''
     return str(result)
 
