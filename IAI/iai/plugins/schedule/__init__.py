@@ -12,7 +12,7 @@ async def Curriculum():
     global  times
     times += 1
     for group in CURRICULUM_ENABLE_GROUP_LIST:
-        classInfos = data_source.getRecentClassInfo(now,group,20)
+        classInfos = await data_source.getRecentClassInfo(now,group,30)
         if not classInfos:
             return
         should_notify = False
@@ -38,6 +38,6 @@ async def MorningCall():
 
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(Curriculum, 'interval', minutes=1)
+scheduler.add_job(Curriculum, 'interval', minutes=5)
 scheduler.add_job(MorningCall, 'cron', day_of_week='mon-fri', hour=7, minute=00,)
 scheduler.start()

@@ -4,12 +4,11 @@ from .data_source import getClassInfo, getRecentClassInfo,get_session_week
 from datetime import datetime
 from IAI.setup import *
 from IAI.nlp.curriculum_nlp import curriculum_nlp
-
+from IAI.iai.plugins.DoYouKnow import do_you_know
 
 @on_command('kcb', aliases=('课程表', '课程'), only_to_me=False)
 async def CurriculumSchedule(session: CommandSession):
     localtime = datetime.now()
-    curriculumStart = datetime(2018, 9, 3)  # todo 自定义设置
     result = "课程信息"
     if 'week' not in session.args.keys() and \
             'weekday' not in session.args.keys() and \
@@ -20,7 +19,7 @@ async def CurriculumSchedule(session: CommandSession):
     if 'weekday' not in session.args.keys():
         session.args['weekday'] = localtime.weekday()
     if 'week' not in session.args.keys():
-        get_session_week(localtime)
+        await get_session_week(localtime)
 
     if 'group_id' not in session.ctx.keys():
         group_id = DEFAULT_GROUP
@@ -45,17 +44,18 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
         classnums = [1,2,3,4,5]
     if next_class:
         if from_schedule:
-            infos = getRecentClassInfo(datetime.now(), group_id, timeLimit=20)
+            infos = await getRecentClassInfo(datetime.now(), group_id, timeLimit=30)
         else:
-            infos = getRecentClassInfo(datetime.now(), group_id,)
+            infos = await getRecentClassInfo(datetime.now(), group_id,)
     else:
         infos = getClassInfo(week, weekday, group_id, classnums)
     result = ''
+    class_num = ['1-2', '3-4', '5-6', '7-8', '9-10']
     if infos :
         for info in infos:
             result += f'''
-┌────
-│    第 {info.class_num} 节
+┌───    {info.group_name}
+│    第 {class_num[info.class_num-1]} 节
 │    【{info.class_name}】
 │    地点： {info.place}
 │    教师：{info.teacher}
@@ -63,6 +63,11 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
         '''
     else:
         result += "没有找到有关的课程信息哦"
+
+    if get_bot().config.OPEN_DO_YOU_KNOW:
+        result += f'''
+--------
+{await do_you_know()}'''
     return str(result)
 
 @on_natural_language({'课'},only_to_me= False, only_short_message=True)

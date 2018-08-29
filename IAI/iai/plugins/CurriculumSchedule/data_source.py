@@ -2,6 +2,7 @@ from sqlalchemy import Integer, Column, String, create_engine, Time, VARCHAR, Da
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime, timedelta, time
+from sqlalchemy import and_, or_
 
 # 创建对象的基类:
 Base = declarative_base()
@@ -39,17 +40,17 @@ def getClassInfoFromTime(time: datetime, group_id, classnums=None) -> list:
 def getClassInfo(week, weekday, group_id, classnums) -> list:
     session = DBSession()
     curriculums = []
-    for classnum in classnums:
-        rs = session.query(Curriculum).order_by(Curriculum.class_num).order_by(Curriculum.class_num).filter(
-            Curriculum.group_id == group_id,
-            Curriculum.weekday == weekday + 1,
-            Curriculum.begin_week <= week,
-            Curriculum.end_week >= week,
-            Curriculum.class_num == classnum
-        ).all()
-        if rs is not None:
-            for r in rs:
-                curriculums.append(r)
+    rs = session.query(Curriculum).filter(
+        Curriculum.group_id == group_id,
+        Curriculum.weekday == weekday + 1,
+        Curriculum.begin_week <= week,
+        Curriculum.end_week >= week,
+        or_(*[Curriculum.class_num == i for i in classnums])
+    ).order_by(Curriculum.group_name).all()
+    session.close()
+    if rs is not None:
+        for r in rs:
+            curriculums.append(r)
     # 为未定义课程时间生成时间
     # 获取当前周
     localtime = datetime.now()
@@ -63,24 +64,24 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
                 curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
             else:
                 curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
-    session.close()
+
     return curriculums
 
 
-def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
+async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
     # 获取当前周
     localtime = datetime.now()
     week = get_session_week(localtime)
 
     # 数据库
     session = DBSession()
-    curriculums = session.query(Curriculum).order_by(Curriculum.class_num).order_by(Curriculum.class_num). \
+    curriculums = session.query(Curriculum). \
         filter(
         Curriculum.group_id == group_id,
         Curriculum.weekday == localtime.weekday() + 1,
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
-    ).all()
+    ).order_by(Curriculum.group_name,Curriculum.class_num).all()
     session.close()
 
     # 为未定义课程时间生成时间

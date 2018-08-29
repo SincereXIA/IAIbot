@@ -26,7 +26,7 @@ async def curriculum_nlp(text):
     if not result['classnums']:
         if '下' in text:
             result['next_class'] = True
-        result['classnums'] = [1,2,3,4]
+        result['classnums'] = [1,2,3,4,5]
 
     result['score'] = client.simnet(text,"要上什么课")['score']
     return result

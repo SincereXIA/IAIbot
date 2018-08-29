@@ -5,3 +5,11 @@ from . import data_source
 async def DoYouKnow(session:CommandSession):
     msg = await data_source.get_do_you_know()
     await session.send(str(msg))
+
+async def do_you_know():
+    data = await data_source.get_do_you_know()
+    msg = f'''
+你知道吗：
+    {data['text']}
+    '''
+    return msg
