@@ -40,7 +40,7 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
     session = DBSession()
     curriculums = []
     for classnum in classnums:
-        rs = session.query(Curriculum).filter(
+        rs = session.query(Curriculum).order_by(Curriculum.class_num).order_by(Curriculum.class_num).filter(
             Curriculum.group_id == group_id,
             Curriculum.weekday == weekday + 1,
             Curriculum.begin_week <= week,
@@ -74,7 +74,7 @@ def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
 
     # 数据库
     session = DBSession()
-    curriculums = session.query(Curriculum).order_by(Curriculum.class_num). \
+    curriculums = session.query(Curriculum).order_by(Curriculum.class_num).order_by(Curriculum.class_num). \
         filter(
         Curriculum.group_id == group_id,
         Curriculum.weekday == localtime.weekday() + 1,

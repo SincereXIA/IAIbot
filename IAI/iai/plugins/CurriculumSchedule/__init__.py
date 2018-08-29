@@ -40,29 +40,14 @@ async def _(session: CommandSession):
         session.args['next_class'] = True
 
 
-
-async def ClassesInfo(week, weekday, group_id, classnum=None, next_class=False):
-    result = f'''
-    要获取第 {week} 周
-    星期 {weekday+1}
-    第 {classnum} 节课的课表
-    '''
-    if next_class:
-        result += await ClassInfo(week, weekday, group_id, classnum, next_class)
-    elif type(classnum) == int:
-        result += await ClassInfo(week, weekday, group_id, classnum)
-    else:
-        for i in range(5):
-            result += await ClassInfo(week, weekday, i + 1, classnum)
-
-    return str(result)
-
-
-async def ClassInfo(week, weekday, group_id, classnums = None, next_class=False):
+async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = False, next_class=False):
     if classnums is None:
         classnums = [1,2,3,4,5]
     if next_class:
-        infos = getRecentClassInfo(datetime.now(), group_id, timeLimit=20)
+        if from_schedule:
+            infos = getRecentClassInfo(datetime.now(), group_id, timeLimit=20)
+        else:
+            infos = getRecentClassInfo(datetime.now(), group_id,)
     else:
         infos = getClassInfo(week, weekday, group_id, classnums)
     result = ''

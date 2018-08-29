@@ -27,7 +27,8 @@ async def Curriculum():
                 session.close()
         if should_notify:
             ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
-            await none.command.call_command(none.get_bot(), ctx, "kcb", args={"next_class": True})
+            await none.command.call_command(none.get_bot(), ctx, "kcb",
+                                            args={"next_class": True, 'from_schedule':True})
 
 
 async def MorningCall():
