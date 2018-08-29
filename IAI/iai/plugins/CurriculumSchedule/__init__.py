@@ -1,6 +1,6 @@
 from none import on_command, command,on_natural_language, NLPSession, NLPResult
 from none import session, CommandSession,get_bot
-from .data_source import getClassInfo, getRecentClassInfo
+from .data_source import getClassInfo, getRecentClassInfo,get_session_week
 from datetime import datetime
 from IAI.setup import *
 from IAI.nlp.curriculum_nlp import curriculum_nlp
@@ -20,8 +20,7 @@ async def CurriculumSchedule(session: CommandSession):
     if 'weekday' not in session.args.keys():
         session.args['weekday'] = localtime.weekday()
     if 'week' not in session.args.keys():
-        day = int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j"))
-        session.args['week'] = day // 7
+        get_session_week(localtime)
 
     if 'group_id' not in session.ctx.keys():
         group_id = DEFAULT_GROUP

@@ -80,7 +80,7 @@ def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
         Curriculum.weekday == localtime.weekday() + 1,
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
-    )
+    ).all()
     session.close()
 
     # 为未定义课程时间生成时间
@@ -102,14 +102,13 @@ def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
                 if curriculum.start_time.strftime("%H%M%S") <= \
                         (localtime + timedelta(minutes=timeLimit)).strftime("%H%M%S"):
                     result.append(curriculum)
-                    continue
-                else:
-                    continue
-            result.append(curriculum)
+            else:
+                result.append(curriculum)
     return result
 
 
 def get_session_week(localtime):
     curriculumStart = datetime(2018, 9, 3)
-    week = (int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j"))) // 7
+    week = (int(localtime.strftime("%j")) -
+            int(curriculumStart.strftime("%j"))) // 7 + 1
     return week
