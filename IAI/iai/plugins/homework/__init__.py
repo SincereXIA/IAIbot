@@ -28,60 +28,63 @@ async def homework(session: CommandSession):
 
 @on_command('add_homework', aliases=('布置作业', '添加作业'))
 async def add_homework(session: CommandSession):
-    if 'group_id' not in session.ctx.keys():
-        group_id = await get_user_group(session.ctx['user_id'])
-    else:
-        group_id = session.ctx['group_id']
+    try:
+        if 'group_id' not in session.ctx.keys():
+            group_id = await get_user_group(session.ctx['user_id'])
+        else:
+            group_id = session.ctx['group_id']
 
-    subject_name = session.get('subject_name', prompt=bot_message.add_homework_msg.subject_name_msg)
-    content = session.get('content', prompt=bot_message.add_homework_msg.get_content)
-    if session.current_arg_images:
-        for image in session.current_arg_images:
-            session.args['content'] += f'''
+        subject_name = session.get('subject_name', prompt=bot_message.add_homework_msg.subject_name_msg)
+        content = session.get('content', prompt=bot_message.add_homework_msg.get_content)
+        if session.current_arg_images:
+            for image in session.current_arg_images:
+                session.args['content'] += f'''
 {image}
-            '''
-    end_date = session.get('end_date', prompt=bot_message.add_homework_msg.end_date_msg)
-    end_date = await date_nlp(end_date)
-    if end_date < datetime.now():
-        await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
-        session.args.pop('end_date')
-        time.sleep(1)
-        session.pause()
+                '''
+        end_date = session.get('end_date', prompt=bot_message.add_homework_msg.end_date_msg)
+        end_date = await date_nlp(end_date)
+        if end_date < datetime.now():
+            await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
+            session.args.pop('end_date')
+            time.sleep(1)
+            session.pause()
 
-    assign_for = session.get('assign_for', prompt=bot_message.add_homework_msg.assign_for_msg)
-    add_date = date.today()
+        assign_for = session.get('assign_for', prompt=bot_message.add_homework_msg.assign_for_msg)
+        add_date = date.today()
 
-    end_date_msg = end_date.strftime("%m ") + '月' + end_date.strftime(" %d") + ' 日，星期' + \
-                   ['一', '二', '三', '四', '五', '六', '日'][end_date.weekday()]
-    homework_message = bot_message.add_homework_msg.confirm.format(
-        subject_name=subject_name,
-        content=content,
-        end_date=end_date_msg,
-        assign_for=assign_for
-    )
+        end_date_msg = end_date.strftime("%m ") + '月' + end_date.strftime(" %d") + ' 日，星期' + \
+                       ['一', '二', '三', '四', '五', '六', '日'][end_date.weekday()]
+        homework_message = bot_message.add_homework_msg.confirm.format(
+            subject_name=subject_name,
+            content=content,
+            end_date=end_date_msg,
+            assign_for=assign_for
+        )
 
-    # 获取用户信息
-    user = await get_user(session.ctx['user_id'])
-    if user:
-        add_by = user.nickname
-    else:
-        add_by = session.ctx['user_id']
+        # 获取用户信息
+        user = await get_user(session.ctx['user_id'])
+        if user:
+            add_by = user.nickname
+        else:
+            add_by = session.ctx['user_id']
 
-    instruction = session.get('instruction', prompt=homework_message)
+        instruction = session.get('instruction', prompt=homework_message)
 
-    if instruction is 'y' or instruction is 't':
-        # 写入数据库
-        homework = await add_homework_info(group_id=group_id, subject_name=subject_name,
-                                           content=content, end_date=end_date,
-                                           assign_for=assign_for, add_by=add_by,
-                                           added_date=add_date
-                                           )
-        await session.send('作业信息添加完成')
-        if instruction is 't':
-            time.sleep(2)
-            await push_homework(homework, group_id)
-    else:
-        await session.send('操作已取消')
+        if instruction is 'y' or instruction is 't':
+            # 写入数据库
+            homework = await add_homework_info(group_id=group_id, subject_name=subject_name,
+                                               content=content, end_date=end_date,
+                                               assign_for=assign_for, add_by=add_by,
+                                               added_date=add_date
+                                               )
+            await session.send('作业信息添加完成')
+            if instruction is 't':
+                time.sleep(2)
+                await push_homework(homework, group_id)
+        else:
+            await session.send('操作已取消')
+    except Exception as e:
+        await session.send('出现错误了，错误信息：'+str(e))
 
 
 @add_homework.args_parser
