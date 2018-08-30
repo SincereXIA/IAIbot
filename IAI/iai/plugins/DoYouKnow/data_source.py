@@ -18,17 +18,15 @@ class DoYouKnow(Base):
     ad_flag = Column(Integer)
 
 async def get_do_you_know():
-    if random.randint(1,3) == 3:
-        session = DBSession()
-        dyn = session.query(DoYouKnow).order_by(func.rand()).first()
-        dyn.times += 1
-        session.merge(dyn)
-        session.close()
-        result = {}
-        result['text'] = dyn.text
-        result['info'] = dyn.times
-    else:
-        result = await get_one_content()
+
+    session = DBSession()
+    dyn = session.query(DoYouKnow).order_by(func.rand()).first()
+    dyn.times += 1
+    session.merge(dyn)
+    session.close()
+    result = {}
+    result['text'] = dyn.text
+    result['info'] = dyn.times
     return result
 
 async def get_one_content():
