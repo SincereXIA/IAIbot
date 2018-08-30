@@ -28,7 +28,7 @@ async def get_do_you_know():
         result['text'] = dyn.text
         result['info'] = dyn.times
     else:
-        result = get_one_content()
+        result = await get_one_content()
     return result
 
 async def get_one_content():
