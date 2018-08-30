@@ -119,7 +119,7 @@ async def homework_info(group_id, localdate: date, subjects=None) -> str:
 @on_natural_language('作业', only_to_me=False, only_short_message=True)
 async def _(session: NLPSession):
     rs = get_subject_name(session.msg_text)
-    if rs['score'] > 0.65:
+    if rs['score'] > 0.66:
         return NLPResult(90, 'homework', {'subjects': rs['subjects']})
 
 
