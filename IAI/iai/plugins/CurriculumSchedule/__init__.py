@@ -1,10 +1,11 @@
-from none import on_command, command,on_natural_language, NLPSession, NLPResult
-from none import session, CommandSession,get_bot
+from none import on_command,on_natural_language, NLPSession, NLPResult
+from none import CommandSession,get_bot
 from .data_source import getClassInfo, getRecentClassInfo,get_session_week
 from datetime import datetime
 from IAI.setup import *
 from IAI.nlp.curriculum_nlp import curriculum_nlp
 from IAI.iai.plugins.DoYouKnow import do_you_know
+from IAI.iai.common.QQUser import get_user_group
 
 @on_command('kcb', aliases=('课程表', '课程'), only_to_me=False)
 async def CurriculumSchedule(session: CommandSession):
@@ -22,7 +23,7 @@ async def CurriculumSchedule(session: CommandSession):
         session.args['week'] = get_session_week(localtime)
 
     if 'group_id' not in session.ctx.keys():
-        group_id = DEFAULT_GROUP
+        group_id = await get_user_group(session.ctx['user_id'])
     else:
         group_id = session.ctx['group_id']
 
