@@ -81,7 +81,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
 async def _(session: NLPSession):
     args = await curriculum_nlp(session.msg_text)
     #await session.send(f'''NLP DEBUG_INFO:{args['debug_info']}+  SCORE:{args['score']}''')
-    if args['score']>= 0.7:
+    if args['score']>= 0.66:
         args.pop('debug_info')
         args.pop('score')
         return NLPResult(90,'kcb',args)

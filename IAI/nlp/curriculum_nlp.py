@@ -1,13 +1,13 @@
 from IAI.nlp import client
 from datetime import datetime
-
+from . import datetime_nlp
 async def curriculum_nlp(text):
     nrs = client.lexer(text)
-    localtime = datetime.now()
     curriculumStart = datetime(2018, 9, 3)  # todo 自定义设置
     result ={}
-    result['week'] = (int(localtime.strftime("%j")) - int(curriculumStart.strftime("%j")))//7
-    result['weekday'] = localtime.weekday()
+    time = await datetime_nlp.date_nlp_jb(text)
+    result['week'] = (int(time.strftime("%j")) - int(curriculumStart.strftime("%j")))//7 + 1
+    result['weekday'] = time.weekday()
     result['classnums'] = []
     result['next_class'] = False
     result['debug_info'] = ""
@@ -15,10 +15,6 @@ async def curriculum_nlp(text):
         if item['ne'] == 'TIME':
             result['debug_info'] += str(item)
             for word in item['basic_words']:
-                if '明' in word:
-                    result['weekday'] = (result['weekday']+1)%7
-                if '后' in word:
-                    result['weekday'] = (result['weekday'] + 2) % 7
                 if '早' in word or '上午' in word:
                     result['classnums'].extend([1,2])
                 if '下午' in word :
@@ -29,5 +25,6 @@ async def curriculum_nlp(text):
         result['classnums'] = [1,2,3,4,5]
 
     result['score'] = client.simnet(text,"要上什么课")['score']
+    print(result['score'])
     return result
 
