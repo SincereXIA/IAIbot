@@ -28,3 +28,9 @@ async def get_user_group(qq_id):
     qqUser = session.query(QQUser).filter(QQUser.qq_id == qq_id).first()
     session.close()
     return qqUser.group_id
+
+async def get_user(qq_id):
+    session = DBSession()
+    qqUser = session.query(QQUser).filter(QQUser.qq_id == qq_id).first()
+    session.close()
+    return qqUser
