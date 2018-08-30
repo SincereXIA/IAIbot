@@ -13,9 +13,9 @@ async def CurriculumSchedule(session: CommandSession):
     result = "课程信息"
     if 'week' not in session.args.keys() and \
             'weekday' not in session.args.keys() and \
-            'classnum' not in session.args.keys() and \
+            'classnums' not in session.args.keys() and \
             'next_class' not in session.args.keys():
-        session.get('classnum', prompt='你要查询今天的第几节课？')
+        session.get('classnums', prompt='你要查询今天的第几节课？')
 
     if 'weekday' not in session.args.keys():
         session.args['weekday'] = localtime.weekday()
@@ -43,6 +43,8 @@ async def _(session: CommandSession):
 async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = False, next_class=False):
     if classnums is None:
         classnums = [1,2,3,4,5]
+    else:
+        classnums = [].extend(classnums)
     if next_class:
         if from_schedule:
             infos = await getRecentClassInfo(datetime.now(), group_id, timeLimit=30)
