@@ -1,6 +1,6 @@
 from none import on_command, CommandSession, get_bot, on_natural_language, NLPSession, NLPResult
 from IAI.iai.plugins.homework.data_source import get_homework_info, Homework, add_homework_info
-from datetime import date
+from datetime import date,datetime
 from IAI.nlp.datetime_nlp import date_nlp
 from IAI.nlp.homework_nlp import get_subject_name
 import IAI.iai.plugins.homework.message as bot_message
@@ -42,6 +42,12 @@ async def add_homework(session: CommandSession):
             '''
     end_date = session.get('end_date', prompt=bot_message.add_homework_msg.end_date_msg)
     end_date = await date_nlp(end_date)
+    if end_date < datetime.now():
+        await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
+        session.args.pop('end_date')
+        time.sleep(1)
+        session.pause()
+
     assign_for = session.get('assign_for', prompt=bot_message.add_homework_msg.assign_for_msg)
     add_date = date.today()
 
@@ -110,7 +116,8 @@ async def homework_info(group_id, localdate: date, subjects=None) -> str:
 @on_natural_language('作业', only_to_me=False, only_short_message=True)
 async def _(session: NLPSession):
     rs = get_subject_name(session.msg_text)
-    return NLPResult(90, 'homework', {'subjects': rs['subjects']})
+    if rs['score'] > 0.65:
+        return NLPResult(90, 'homework', {'subjects': rs['subjects']})
 
 
 def print_homework_info(homeworks):

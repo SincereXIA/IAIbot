@@ -38,17 +38,17 @@ async def get_homework_info(group_id, date: date, subjects=None):
                 Homework.added_date <= date,
                 Homework.end_date >= date,
                 Homework.subject_name.like(like_str)
-            ).all())
+            ).order_by(Homework.end_date).all())
     else:
         results.extend(session.query(Homework).filter(
             Homework.group_id == group_id,
             Homework.added_date <= date,
             Homework.end_date >= date,
-        ).all())
+        ).order_by(Homework.end_date).all())
 
     session.close()
 
-    return set([i for i in results])
+    return sorted(list(set([i for i in results])), key=lambda x:x.end_date)
 
 
 async def add_homework_info(group_id, subject_name, content, end_date,
