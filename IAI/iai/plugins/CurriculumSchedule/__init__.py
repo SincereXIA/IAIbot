@@ -10,7 +10,7 @@ from IAI.iai.common.QQUser import get_user_group
 @on_command('kcb', aliases=('课程表', '课程'), only_to_me=False)
 async def CurriculumSchedule(session: CommandSession):
     localtime = datetime.now()
-    if 'from_cron' in session.args.keys():
+    if 'from_schedule' in session.args.keys():
         result = "以下课程即将开始上课：\n"
     else:
         result = "课程信息：\n"
@@ -79,7 +79,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
     else:
         result += "没有找到有关的课程信息哦"
 
-    if get_bot().config.OPEN_DO_YOU_KNOW:
+    if get_bot().config.OPEN_DO_YOU_KNOW and 'from_schedule' in kw.keys():
         result += f'''        
 {await do_you_know()}'''
     return str(result)

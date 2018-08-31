@@ -28,10 +28,12 @@ async def _(session: RequestSession):
 
 @on_notice('group_increase')
 async def _(session: NoticeSession):
+    bot = get_bot()
     time.sleep(random.randrange(2, 5))
-    url = 'http://127.0.0.1:5700/get_group_member_list'
+    url = f'http://{bot.config.IP_ADDRESS}:{bot.config.IP_PORT}/get_group_member_list'
     rs = requests.get(url, {'group_id': session.ctx['group_id']})
     r = json.loads(rs.text)
+
     count = [0,0]
     for i in r['data']:
         i['qq_id'] = i['user_id']

@@ -6,7 +6,8 @@ import IAI.iai.plugins.cp7days.data_source as data_source
 
 @on_command('cp7days', aliases=('一周',))
 async def cp7days(session:CommandSession):
-    url = 'http://127.0.0.1:5700/get_stranger_info'
+    bot = get_bot()
+    url = f'http://{bot.config.IP_ADDRESS}:{bot.config.IP_PORT}/get_stranger_info'
     re = requests.get(url, {'user_id': session.ctx['user_id']})
     userinfo = json.loads(re.text)['data']
     if userinfo['sex'] == 'male': userinfo['sex'] = 1

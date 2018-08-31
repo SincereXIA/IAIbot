@@ -41,4 +41,10 @@ async def MorningCall():
         ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
         await none.command.call_command(none.get_bot(), ctx, "morning_call", )
 
+@scheduler.scheduled_job('cron', day_of_week='mon-fri', hour=19, minute=00,)
+async def HomeworkEveryday():
+    for group in HOMEWORK_EVERYDAY_ENABLE_GROUP_LIST:
+        time.sleep(random.randint(2, 6))
+        ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
+        await none.command.call_command(none.get_bot(), ctx, "homework", args={'from_schedule': True})
 
