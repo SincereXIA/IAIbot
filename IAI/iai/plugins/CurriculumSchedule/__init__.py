@@ -77,7 +77,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
         result += "没有找到有关的课程信息哦"
 
     if get_bot().config.OPEN_DO_YOU_KNOW:
-        result+='''        
+        result += f'''        
 {await do_you_know()}'''
     return str(result)
 
