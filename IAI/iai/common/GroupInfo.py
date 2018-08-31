@@ -22,11 +22,13 @@ class GroupInfo(Base):
     is_homework_daily_on = Column(Boolean)
     is_curriculumschedule_on = Column(Boolean)
 
+
 async def get_group_info(group_id) -> GroupInfo:
     session = DBSession()
     group_info = session.query(GroupInfo).filter(GroupInfo.group_id == group_id).first()
     session.close()
     return group_info
+
 
 async def add_group_info(group_id, group_name, last_weather_notify=None,
                          is_morningcall_on=True, is_curriculumschedule_on=True,
@@ -53,6 +55,7 @@ async def add_group_info(group_id, group_name, last_weather_notify=None,
         session.close()
         return 0
 
+
 async def update_last_weather_notify(group_id, last_weather_notify):
     try:
         session = DBSession()
@@ -62,7 +65,8 @@ async def update_last_weather_notify(group_id, last_weather_notify):
         session.commit()
         session.close()
     except Exception as e:
-        raise RuntimeError('更新notify时间时失败：'+str(e))
+        raise RuntimeError('更新notify时间时失败：' + str(e))
+
 
 async def get_all_group_info():
     try:
@@ -70,5 +74,5 @@ async def get_all_group_info():
         group = session.query(GroupInfo).all()
         session.close()
     except Exception as e:
-        raise RuntimeError('更新notify时间时失败：'+str(e))
+        raise RuntimeError('更新notify时间时失败：' + str(e))
     return group
