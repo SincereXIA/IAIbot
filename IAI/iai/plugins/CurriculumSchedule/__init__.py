@@ -43,8 +43,8 @@ async def _(session: CommandSession):
 async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = False, next_class=False):
     if classnums is None:
         classnums = [1,2,3,4,5]
-    else:
-        classnums = [].extend(classnums)
+    elif not isinstance(classnums,list):
+        classnums = list(classnums)
     if next_class:
         if from_schedule:
             infos = await getRecentClassInfo(datetime.now(), group_id, timeLimit=30)
@@ -70,12 +70,14 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
 │    地点： {info.place}
 │    教师：{info.teacher}
 │    时间：{info.start_time.strftime('%H:%M')}'''
+        else:
+            result += f'''
+└───'''
     else:
         result += "没有找到有关的课程信息哦"
 
     if get_bot().config.OPEN_DO_YOU_KNOW:
-        result += f'''
-└───  
+        result+='''        
 {await do_you_know()}'''
     return str(result)
 
