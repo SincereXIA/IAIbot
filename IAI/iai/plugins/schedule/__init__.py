@@ -7,13 +7,12 @@ import none.command
 from IAI import DBdriver
 import time
 import random
-times = 0
+from none import scheduler
 
 
+@scheduler.scheduled_job('interval', minutes=5)
 async def Curriculum():
     now = datetime.now()
-    global times
-    times += 1
     for group in CURRICULUM_ENABLE_GROUP_LIST:
         time.sleep(random.randint(2,6))
         classInfos = await data_source.getRecentClassInfo(now, group, 30)
@@ -35,13 +34,11 @@ async def Curriculum():
                                             args={"next_class": True, 'from_schedule': True})
 
 
+@scheduler.scheduled_job('cron', day_of_week='mon-fri', hour=7, minute=00,)
 async def MorningCall():
     for group in MORNING_CALL_ENABLE_GROUP_LIST:
+        time.sleep(random.randint(2, 6))
         ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group}
         await none.command.call_command(none.get_bot(), ctx, "morning_call", )
 
 
-scheduler = AsyncIOScheduler()
-scheduler.add_job(Curriculum, 'interval', minutes=5)
-scheduler.add_job(MorningCall, 'cron', day_of_week='mon-fri', hour=7, minute=00, )
-scheduler.start()

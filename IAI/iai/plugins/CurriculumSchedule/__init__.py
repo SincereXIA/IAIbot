@@ -10,7 +10,10 @@ from IAI.iai.common.QQUser import get_user_group
 @on_command('kcb', aliases=('课程表', '课程'), only_to_me=False)
 async def CurriculumSchedule(session: CommandSession):
     localtime = datetime.now()
-    result = "课程信息"
+    if 'from_cron' in session.args.keys():
+        result = "以下课程即将开始上课：\n"
+    else:
+        result = "课程信息：\n"
     if 'week' not in session.args.keys() and \
             'weekday' not in session.args.keys() and \
             'classnums' not in session.args.keys() and \
@@ -40,7 +43,7 @@ async def _(session: CommandSession):
         session.args['next_class'] = True
 
 
-async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = False, next_class=False):
+async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = False, next_class=False, **kw):
     if classnums is None:
         classnums = [1,2,3,4,5]
     elif not isinstance(classnums,list):
@@ -52,7 +55,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
             infos = await getRecentClassInfo(datetime.now(), group_id,)
     else:
         infos = getClassInfo(week, weekday, group_id, classnums)
-    result = ''
+    result = f'第 {week} 教学周  星期{weekday+1}'
     class_num = ['1-2', '3-4', '5-6', '7-8', '9-10']
     group_name = ""
     if infos :

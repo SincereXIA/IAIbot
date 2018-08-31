@@ -4,6 +4,7 @@ from . import data_source, message
 from IAI.iai.plugins.weather.data_source import get_today_weather_info
 from datetime import datetime
 from IAI.iai.common.QQUser import get_user_group
+from IAI.iai.plugins.DoYouKnow.data_source import get_one_content
 
 
 @on_command('morning_call')
@@ -53,7 +54,7 @@ async def one(session: CommandSession):
 
 @on_command('one')
 async def one(session: CommandSession):
-    data = await data_source.get_one_content()
+    data = await get_one_content()
     msg = f'''
     {data['text']}
     —— {data['info']}
@@ -62,7 +63,7 @@ async def one(session: CommandSession):
 
 
 async def one_msg():
-    data = await data_source.get_one_content()
+    data = await get_one_content()
     msg = f'''
     「{data['text']}」
     —— {data['info']}

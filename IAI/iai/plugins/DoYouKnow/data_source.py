@@ -30,12 +30,20 @@ async def get_do_you_know():
     return result
 
 async def get_one_content():
-    idlist = requests.get('http://v3.wufazhuce.com:8000/api/onelist/idlist')
-    idlist = json.loads(idlist.text)
-    id = int(idlist['data'][0])
-    content = requests.get(f'http://v3.wufazhuce.com:8000/api/onelist/{id-random.randint(0,300)}/0')
-    content = json.loads(content.text)
-    result = {}
-    result['text'] = content['data']['content_list'][0]['forward']
-    result['info'] = content['data']['content_list'][0]['words_info']
+    try:
+        idlist = requests.get('http://v3.wufazhuce.com:8000/api/onelist/idlist')
+        idlist = json.loads(idlist.text)
+        id = int(idlist['data'][0])
+    except Exception:
+        id = 4100
+    try:
+        content = requests.get(f'http://v3.wufazhuce.com:8000/api/onelist/{id-random.randint(0,300)}/0')
+        content = json.loads(content.text)
+        result = {}
+        result['text'] = content['data']['content_list'][0]['forward']
+        result['info'] = content['data']['content_list'][0]['words_info']
+    except Exception:
+        result = {}
+        result['text'] = "希望你孤独又不走运，没人喜欢，这样只剩我可以喜欢。希望你所到之处潮闷落雨，于是想念有我的好天。要你在精彩美貌又友善的世界仍然喜欢我，当然也好，可是完全没有这样的信心，也决不肯冒那样的险。要是我有钱，就把你买回家。要是我做官，就把你关进监牢去。"
+        result['info'] = "苏方"
     return result

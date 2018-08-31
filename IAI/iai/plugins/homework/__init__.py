@@ -42,11 +42,16 @@ async def add_homework(session: CommandSession):
 {image}
             '''
     end_date = session.get('end_date', prompt=bot_message.add_homework_msg.end_date_msg)
-    end_date = await date_nlp(end_date)
-    if end_date < datetime.now():
-        await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
+    try:
+        end_date = await date_nlp(end_date)
+        if end_date < datetime.now():
+            await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
+            session.args.pop('end_date')
+            time.sleep(1)
+            session.pause()
+    except Exception as e:
+        await session.send('输入的信息有误，错误信息：'+str(e)+'请重新输入')
         session.args.pop('end_date')
-        time.sleep(1)
         session.pause()
 
     assign_for = session.get('assign_for', prompt=bot_message.add_homework_msg.assign_for_msg)
