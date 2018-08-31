@@ -5,7 +5,7 @@ async def curriculum_nlp(text):
     nrs = client.lexer(text)
     curriculumStart = datetime(2018, 9, 3)  # todo 自定义设置
     result ={}
-    time = await datetime_nlp.date_nlp_jb(text)
+    time = await datetime_nlp.date_nlp(text)
     result['week'] = (int(time.strftime("%j")) - int(curriculumStart.strftime("%j")))//7 + 1
     result['weekday'] = time.weekday()
     result['classnums'] = []
