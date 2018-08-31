@@ -141,7 +141,8 @@ async def get_weather_forecast(city: str):
     'wind_sc': '1-2', 
     'wind_spd': '4'}
   """
-    #weather_results[city]['hourly'] = rs['hourly']
+    weather_results[city]['hourly'] = rs['hourly']
+    """
     weather_results[city]['hourly'] = \
 [{'cloud': '13', 
 'cond_code': '101', 
@@ -157,7 +158,7 @@ async def get_weather_forecast(city: str):
 'wind_sc': '3-4', 
 'wind_spd': '24'}, 
 {'cloud': '12', 'cond_code': '100', 'cond_txt': '小雨', 'dew': '15', 'hum': '36', 'pop': '40', 'pres': '1003', 'time': '2018-08-31 16:00', 'tmp': '33', 'wind_deg': '86', 'wind_dir': '东风', 'wind_sc': '3-4', 'wind_spd': '24'}, {'cloud': '20', 'cond_code': '100', 'cond_txt': '晴', 'dew': '16', 'hum': '44', 'pop': '0', 'pres': '1004', 'time': '2018-08-31 19:00', 'tmp': '30', 'wind_deg': '95', 'wind_dir': '东风', 'wind_sc': '3-4', 'wind_spd': '21'}, {'cloud': '28', 'cond_code': '100', 'cond_txt': '晴', 'dew': '16', 'hum': '53', 'pop': '0', 'pres': '1007', 'time': '2018-08-31 22:00', 'tmp': '29', 'wind_deg': '99', 'wind_dir': '东风', 'wind_sc': '3-4', 'wind_spd': '15'}, {'cloud': '31', 'cond_code': '100', 'cond_txt': '晴', 'dew': '16', 'hum': '65', 'pop': '0', 'pres': '1008', 'time': '2018-09-01 01:00', 'tmp': '27', 'wind_deg': '92', 'wind_dir': '东风', 'wind_sc': '3-4', 'wind_spd': '16'}, {'cloud': '67', 'cond_code': '101', 'cond_txt': '多云', 'dew': '16', 'hum': '74', 'pop': '0', 'pres': '1009', 'time': '2018-09-01 04:00', 'tmp': '25', 'wind_deg': '98', 'wind_dir': '东风', 'wind_sc': '3-4', 'wind_spd': '20'}, {'cloud': '66', 'cond_code': '101', 'cond_txt': '多云', 'dew': '17', 'hum': '74', 'pop': '0', 'pres': '1010', 'time': '2018-09-01 07:00', 'tmp': '25', 'wind_deg': '83', 'wind_dir': '东风', 'wind_sc': '1-2', 'wind_spd': '2'}, {'cloud': '81', 'cond_code': '101', 'cond_txt': '多云', 'dew': '16', 'hum': '56', 'pop': '0', 'pres': '1010', 'time': '2018-09-01 10:00', 'tmp': '29', 'wind_deg': '115', 'wind_dir': '东南风', 'wind_sc': '3-4', 'wind_spd': '14'}]
-
+"""
     weather_results[city]['lifestyle'] = rs['lifestyle']
     """
 0 = {dict} {'type': 'comf', 'brf': '较不舒适', 'txt': '白天天气多云，同时会感到有些热，不很舒适。'}
