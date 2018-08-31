@@ -2,6 +2,7 @@ from sqlalchemy import Integer, Column, Boolean, VARCHAR, Date, DATETIME
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime
+from IAI.iai.common.GroupInfo import GroupInfo
 
 # 创建对象的基类:
 Base = declarative_base()
@@ -44,4 +45,6 @@ async def add_QQUser(qq_id, nickname, group_id=None, group_card=None,
         session.commit()
         session.close()
         return 0
+
+
 

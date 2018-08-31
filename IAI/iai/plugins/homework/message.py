@@ -38,7 +38,7 @@ class get_homework_msg:
     no_homework_msg = '''
 未获取到任何作业信息
 
-有没有好心人来告诉我作业？
+有没有好心人来告诉我作业[CQ:face,id=32]
 @我 或 私聊我：「添加作业」 试试吧
     '''
     subject_homework_msg = '''

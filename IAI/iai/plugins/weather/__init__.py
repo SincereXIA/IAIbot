@@ -5,6 +5,10 @@ from none import on_command, CommandSession, get_bot
 from none import on_natural_language, NLPSession, NLPResult
 from .data_source import get_weather_of_city, get_weather_of_city_HF, should_forecast, get_forecast
 from jieba import posseg
+from . import data_source
+from IAI.iai.common.GroupInfo import get_group_info, update_last_weather_notify
+from datetime import datetime, timedelta
+from IAI.iai.plugins.DoYouKnow import one_msg
 
 
 @on_command('weather', aliases=('天气',))
@@ -43,5 +47,32 @@ async def _(session: NLPSession):
     for word in words:
         if word.flag == 'ns':
             city = word.word
-    await session.send('NLP 处理成功')
     return NLPResult(90.0, 'weather', {'city': city})
+
+
+@on_command('weather_forecast_hourly')
+async def weather_forecast_hourly(session: CommandSession):
+    group_info = await get_group_info(session.ctx['group_id'])
+    if group_info.last_weather_notify is not None and group_info.last_weather_notify > datetime.now() - timedelta(hours=6):
+        return
+
+    alert = {}
+    for hourly_info in (await data_source.get_weather_hourly(get_bot().config.DEFAULT_CITY))[0:2]:
+        if '雨' in hourly_info['cond_txt'] or '雪' in hourly_info['cond_txt']:
+            alert['cond'] = hourly_info['cond_txt']
+            alert['pop'] = hourly_info['pop']
+            await update_last_weather_notify(session.ctx['group_id'], datetime.now())
+
+
+    if alert:
+        one = await one_msg()
+        msg = f'''
+监测到未来 3 小时内 {get_bot().config.DEFAULT_CITY} 地区可能有降水🌧：
+
+{alert['cond']}
+降水概率：{alert['pop']}%
+
+---
+{one}'''
+        ctx = {'message_type': 'group', 'self_id': get_bot().config.ROBOT_ID, 'group_id': session.ctx['group_id']}
+        await get_bot().send(ctx, msg)

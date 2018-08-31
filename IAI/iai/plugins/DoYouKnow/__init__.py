@@ -16,3 +16,12 @@ async def do_you_know():
     {data['text']}
     '''
     return msg
+
+
+async def one_msg():
+    data = await data_source.get_one_content()
+    msg = f'''
+    「{data['text']}」
+    —— {data['info']}
+        '''
+    return msg
