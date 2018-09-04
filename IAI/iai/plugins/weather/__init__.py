@@ -53,7 +53,7 @@ async def _(session: NLPSession):
 @on_command('weather_forecast_hourly')
 async def weather_forecast_hourly(session: CommandSession):
     group_info = await get_group_info(session.ctx['group_id'])
-    if group_info.last_weather_notify is not None and group_info.last_weather_notify > datetime.now() - timedelta(hours=6):
+    if group_info.last_weather_notify and group_info.last_weather_notify > (datetime.now() - timedelta(hours=6)):
         return
 
     alert = {}
