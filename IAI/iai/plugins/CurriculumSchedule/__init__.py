@@ -50,7 +50,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
         classnums = list(classnums)
     if next_class:
         if from_schedule:
-            infos = await getRecentClassInfo(datetime.now(), group_id, timeLimit=30)
+            infos = await getRecentClassInfo(datetime.now(), group_id, timeLimit=45)
         else:
             infos = await getRecentClassInfo(datetime.now(), group_id,)
     else:
@@ -88,7 +88,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
 async def _(session: NLPSession):
     args = await curriculum_nlp(session.msg_text)
     #await session.send(f'''NLP DEBUG_INFO:{args['debug_info']}+  SCORE:{args['score']}''')
-    if args['score']>= 0.66:
+    if args['score']>= 0.66 or '课程表' in session.msg_text or '课表' in session.msg_text:
         args.pop('debug_info')
         args.pop('score')
         return NLPResult(90,'kcb',args)
