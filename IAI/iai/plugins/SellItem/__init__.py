@@ -5,7 +5,6 @@ from datetime import datetime
 from . import message
 from . import data_source
 from . import nlp
-import none
 
 
 @on_command('add_item', aliases="出")
@@ -30,7 +29,7 @@ async def user_add_item(session: CommandSession):
     ))
     if cfm is 'y':
         await data_source.add_item(**session.args, seller_id=seller_id, from_group_id=from_group_id)
-        await session.send('物品信息发布成功')
+        await session.send('物品信息发布成功\n物品卖掉之后记得 @我 删掉物品信息哦')
     else:
         await session.send('操作已取消')
 
@@ -60,6 +59,7 @@ async def user_find_item(session: CommandSession):
     if not 'continue' in session.args.keys():
         msg = await print_item_list_from_keys(key_word, session.args['page'], session.args['type'])
         await session.send(msg + message.find_item.item_list_msg)
+        session.args['continue'] = True
     while True:
         cmd = session.get('cmd')
         if '下一页' in cmd or 'n' in cmd:
@@ -84,7 +84,7 @@ async def user_find_item(session: CommandSession):
             try:
                 id = int(cmd[0])
             except Exception:
-                await session.send("输入有误，退出本次检索")
+                await session.send("已退出本次会话，请 @我 输入指令信息")
                 session.finish()
                 return
             await session.send(await print_item_info(id)+message.find_item.item_detail_more)
@@ -118,7 +118,11 @@ async def print_item_list_from_keys(key_words, page=1, type="sell", ):
     if key_words:
         msg += f'''
 关于 {key_words} 找到以下内容：
-        '''
+'''
+    else:
+        msg += f'''
+没有发现关键字，向你展示所有的内容
+                '''
     items = await data_source.get_item_list(key_words, type)
     if page > len(items) // 10 + 1:
         return "当前已经是最后一页了哦"
@@ -185,62 +189,6 @@ def replace_all_url(sentence):
     return sentence
 
 
-@on_command('user_items', aliases=("我的",))
-async def user_items(session: CommandSession):
-    seller_id = session.ctx['user_id']
-    items = await data_source.get_my_item(seller_id)
-    msg = await print_item_list(items)
-    if not 'continue' in session.args.keys():
-        await session.send(msg + message.find_item.item_list_msg)
-        session.args['continue'] = True
-    while True:
-        cmd = session.get('cmd')
-        if '下一页' in cmd or 'n' in cmd:
-            session.args['page'] += 1
-            session.args.pop('cmd')
-            try:
-                session.args.pop('continue')
-            except Exception:
-                pass
-            await user_find_item(session)
-            return
-        elif '上一页' in cmd or 'n' in cmd:
-            session.args['page'] -= 1
-            session.args.pop('cmd')
-            try:
-                session.args.pop('continue')
-            except Exception:
-                pass
-            await user_find_item(session)
-            return
-        else:
-            try:
-                id = int(cmd[0])
-            except Exception:
-                await session.send("退出本次检索")
-                session.finish()
-                return
-            await session.send(await print_item_info(id))
-            session.args.pop('cmd')
-            session.args['continue'] = True
-
-
-@user_items.args_parser
-async def _(session: CommandSession):
-    stripped_arg = session.current_arg_text.strip()
-    if stripped_arg == 'q':
-        await session.send("退出本次会话")
-        session.finish()
-    if session.current_key:
-        session.args[session.current_key] = stripped_arg.split(" ")
-
-    elif stripped_arg:
-        split_arg = stripped_arg.split(" ")
-        session.args['key_word'] = split_arg
-        if '收' in split_arg:
-            session.args['type'] = "want"
-            session.args['key_word'].remove("收")
-
 
 
 @on_command('want_item', aliases="收")
@@ -278,6 +226,63 @@ async def _(session: CommandSession):
         session.args[session.current_key] = stripped_arg
     elif stripped_arg:
         session.args['item_name'] = stripped_arg
+
+
+@on_command('user_items', aliases=("我的",))
+async def user_items(session: CommandSession):
+    seller_id = session.ctx['user_id']
+    items = await data_source.get_my_item(seller_id)
+    msg = await print_item_list(items)
+    if not 'continue' in session.args.keys():
+        await session.send(msg + message.find_item.item_list_msg)
+        session.args['continue'] = True
+    while True:
+        cmd = session.get('cmd')
+        if '下一页' in cmd or 'n' in cmd:
+            session.args['page'] += 1
+            session.args.pop('cmd')
+            try:
+                session.args.pop('continue')
+            except Exception:
+                pass
+            await user_find_item(session)
+            return
+        elif '上一页' in cmd or 'n' in cmd:
+            session.args['page'] -= 1
+            session.args.pop('cmd')
+            try:
+                session.args.pop('continue')
+            except Exception:
+                pass
+            await user_find_item(session)
+            return
+        else:
+            try:
+                id = int(cmd[0])
+            except Exception:
+                await session.send("已退出本次会话，请 @我 输入指令信息")
+                session.finish()
+                return
+            await session.send(await print_item_info(id))
+            session.args.pop('cmd')
+            session.args['continue'] = True
+
+
+@user_items.args_parser
+async def _(session: CommandSession):
+    stripped_arg = session.current_arg_text.strip()
+    if stripped_arg == 'q':
+        await session.send("退出本次会话")
+        session.finish()
+    if session.current_key:
+        session.args[session.current_key] = stripped_arg.split(" ")
+
+    elif stripped_arg:
+        split_arg = stripped_arg.split(" ")
+        session.args['key_word'] = split_arg
+        if '收' in split_arg:
+            session.args['type'] = "want"
+            session.args['key_word'].remove("收")
 
 
 @on_command('del_item', aliases="删")
@@ -358,3 +363,6 @@ async def _(session: CommandSession):
         session.args[session.current_key] = stripped_arg
     elif stripped_arg:
         session.args['id'] = stripped_arg
+
+
+
