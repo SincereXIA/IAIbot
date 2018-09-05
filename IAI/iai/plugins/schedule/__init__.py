@@ -55,7 +55,7 @@ async def HomeworkEveryday():
 
 
 @scheduler.scheduled_job('interval', minutes=18)
-async def HomeworkEveryday():
+async def weather_notify():
     for group in await get_all_group_info():
         if group.is_weather_notify_on:
             time.sleep(random.randint(2, 6))
