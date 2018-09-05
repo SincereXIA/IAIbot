@@ -40,7 +40,8 @@ class find_item:
 
 联系：{seller_id}
 发布日期：{add_time}
-
+'''
+    item_detail_more = '''
 ---
 查看其它物品，请直接回复物品前编号
 寻找更多物品？回复 「下一页」
