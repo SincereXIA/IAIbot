@@ -4,6 +4,7 @@ from none import on_command, CommandSession, get_bot, NLPResult
 from datetime import datetime
 from . import message
 from . import data_source
+from . import nlp
 import none
 
 
@@ -30,6 +31,8 @@ async def user_add_item(session: CommandSession):
     if cfm is 'y':
         await data_source.add_item(**session.args, seller_id=seller_id, from_group_id=from_group_id)
         await session.send('物品信息发布成功')
+    else:
+        await session.send('操作已取消')
 
 
 @user_add_item.args_parser
@@ -240,7 +243,7 @@ async def _(session: CommandSession):
 
 
 
-@on_command('add_item', aliases="收")
+@on_command('want_item', aliases="收")
 async def user_want_item(session: CommandSession):
     item_name = session.get('item_name', prompt=message.want_item.item_name_msg)
     session.get('item_info', prompt=message.want_item.item_info_msg.format(item_name=item_name))
@@ -339,8 +342,19 @@ async def update_item(session: CommandSession):
         if item_name == 'n':
             item_name = None
         msg = message.user_center.update_item_info_msg.format(item_info=item.item_info)
-        item_info = session.get('item_name', prompt=msg)
+        item_info = session.get('item_info', prompt=msg)
         if item_info == 'n':
             item_info = None
         await data_source.update_item(id, item_name, item_info)
         await session.send("信息修改成功！")
+
+@update_item.args_parser
+async def _(session: CommandSession):
+    stripped_arg = session.current_arg_text.strip()
+    if stripped_arg == 'q':
+        await session.send("退出本次会话")
+        session.finish()
+    if session.current_key:
+        session.args[session.current_key] = stripped_arg
+    elif stripped_arg:
+        session.args['id'] = stripped_arg

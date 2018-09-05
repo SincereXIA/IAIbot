@@ -38,10 +38,10 @@ async def add_group_info(group_id, group_name, last_weather_notify=None,
     if group:
         group.group_id = group_id
         group.group_name = group_name
-        group.is_morningcall_on = True
-        group.is_curriculumschedule_on = True
-        group.is_weather_notify_on = True
-        group.is_homework_daily_on = True
+        group.is_morningcall_on = False
+        group.is_curriculumschedule_on = False
+        group.is_weather_notify_on = False
+        group.is_homework_daily_on = False
         session.merge(group)
         session.commit()
         session.close()

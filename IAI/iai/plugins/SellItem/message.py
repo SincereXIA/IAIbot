@@ -50,7 +50,7 @@ class find_item:
     item_list_msg = '''
 ---
 回复 「下一页」 查看更多条目，
-回复物品前的数字编号，查看该物品的详细信息
+回复物品前的数字编号，查看该物品的详细信息和图片
     '''
 class user_center:
     item_list_msg = '''
@@ -82,25 +82,25 @@ class user_center:
 
 class want_item:
     item_name_msg = '''
-    请输入你想收购的物品名称：
+请输入你想收购的物品名称：
         '''
     item_info_msg = '''
-    你要收购：{item_name}
-    你还可以提一些更详细的要求：
+你要收购：{item_name}
+你还可以提一些更详细的要求：
 
-    ---
-    tips：可输入文字/单张图片/文字+图片/
-    回复 「空格」 跳过
+---
+tips：可输入文字/单张图片/文字+图片/
+回复 「空格」 跳过
         '''
     item_add_confirm = '''
-    收购物品：{item_name}
-    {item_info}
+收购物品：{item_name}
+{item_info}
 
-    联系方式：{seller_id}
+联系方式：{seller_id}
 
-    ----
-    >> 以上信息确认无误吗？
-    确认发布请回复: 'y'
-    发布并即刻推送到交易群请回复: 't'
-    删除此信息请回复: 'n'
+----
+>> 以上信息确认无误吗？
+确认发布请回复: 'y'
+发布并即刻推送到交易群请回复: 't'
+删除此信息请回复: 'n'
         '''

@@ -29,7 +29,7 @@ async def add_item(item_name, item_info, seller_id, type='sell', from_group_id=N
     if add_time is None:
         add_time = datetime.now()
     item = SellItem(item_name=item_name, item_info=item_info, seller_id=seller_id,
-                    from_group_id=from_group_id, add_time=add_time, type=type)
+                    from_group_id=from_group_id, add_time=add_time, type=type, is_onsell = True)
     session = DBSession()
     session.add(item)
     session.commit()
@@ -47,11 +47,13 @@ async def get_item_list(key_words=None, type="sell"):
                 like_str += '%'
             results.extend(session.query(SellItem).filter(
                 SellItem.type == type,
+                SellItem.is_onsell == True,
                 SellItem.item_name.like(like_str)
             ).order_by(SellItem.add_time).all())
     else:
         results.extend(session.query(SellItem).filter(
             SellItem.type == type,
+            SellItem.is_onsell == True,
         ).order_by(SellItem.add_time).all())
 
     session.close()
@@ -68,7 +70,8 @@ async def get_item(id):
 
 async def get_my_item(seller_id):
     session = DBSession()
-    item = session.query(SellItem).filter(SellItem.seller_id == seller_id).all()
+    item = session.query(SellItem).filter(SellItem.seller_id == seller_id,
+                                          SellItem.is_onsell == True,).all()
     session.close()
     return item
 
