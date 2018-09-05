@@ -27,9 +27,12 @@ async def user_add_item(session: CommandSession):
         item_info=session.args['item_info'],
         seller_id=seller_id
     ))
-    if cfm is 'y':
-        await data_source.add_item(**session.args, seller_id=seller_id, from_group_id=from_group_id)
+    if cfm is 'y' or cfm is 't':
+        item = await data_source.add_item(**session.args, seller_id=seller_id, from_group_id=from_group_id)
         await session.send('物品信息发布成功\n物品卖掉之后记得 @我 删掉物品信息哦')
+        if cfm is 't':
+            await push_item(item, type='sell')
+
     else:
         await session.send('操作已取消')
 
@@ -87,7 +90,7 @@ async def user_find_item(session: CommandSession):
                 await session.send("已退出本次会话，请 @我 输入指令信息")
                 session.finish()
                 return
-            await session.send(await print_item_info(id)+message.find_item.item_detail_more)
+            await session.send(await print_item_info(id) + message.find_item.item_detail_more)
             session.args.pop('cmd')
             session.args['continue'] = True
 
@@ -122,7 +125,7 @@ async def print_item_list_from_keys(key_words, page=1, type="sell", ):
     else:
         msg += f'''
 没有发现关键字，向你展示所有的内容
-                '''
+'''
     items = await data_source.get_item_list(key_words, type)
     if page > len(items) // 10 + 1:
         return "当前已经是最后一页了哦"
@@ -130,7 +133,11 @@ async def print_item_list_from_keys(key_words, page=1, type="sell", ):
         msg += "有人想出这些东西：\n"
     else:
         msg += "有人想要这些东西：\n"
-    msg += f'''第{page}页，共{len(items)//10+1}页'''
+    msg += f'''第{page}页，共{len(items)//10+1}页\n'''
+    if len(items) == 0 and type=="sell":
+        msg += '\n\n暂时还没有信息哦，\n@我 说：\n收[你想要的物品] 吧\n'
+    if len(items) == 0 and type=="want":
+        msg += '\n\n暂时还没有信息哦，\n@我 说：\n出[你的闲置物品] 吧\n'
     start = (page - 1) * 10
     if start + 10 > len(items):
         end = len(items)
@@ -143,17 +150,22 @@ async def print_item_list_from_keys(key_words, page=1, type="sell", ):
         else:
             item_name = item.item_name
         item_info = replace_all_url(item.item_info)
+        if len(item.item_name) > 25:
+            item_name = item.item_name[:25]
         msg += message.find_item.item_msg.format(id=item.id, item_name=item_name,
                                                  item_info=item_info)
     return msg
 
 
 async def print_item_list(items, page=1):
-    if page < 1 :
+    if page < 1:
         return "当前已经是第一页了哦"
     if page > len(items) // 10 + 1:
         return "当前已经是最后一页了哦"
     msg = f'''第{page}页，共{len(items)//10+1}页'''
+    if len(items) == 0 :
+        msg += '\n\n暂时还没有信息哦'
+
     start = (page - 1) * 10
     if start + 10 > len(items):
         end = len(items)
@@ -166,6 +178,8 @@ async def print_item_list(items, page=1):
         else:
             item_name = item.item_name
         item_info = replace_all_url(item.item_info)
+        if len(item.item_name) > 25:
+            item_name = item.item_name[:25]
         msg += message.find_item.item_msg.format(id=item.id, item_name=item_name,
                                                  item_info=item_info)
     return msg
@@ -189,8 +203,6 @@ def replace_all_url(sentence):
     return sentence
 
 
-
-
 @on_command('want_item', aliases="收")
 async def user_want_item(session: CommandSession):
     item_name = session.get('item_name', prompt=message.want_item.item_name_msg)
@@ -211,9 +223,13 @@ async def user_want_item(session: CommandSession):
         item_info=session.args['item_info'],
         seller_id=seller_id
     ))
-    if cfm is 'y':
-        await data_source.add_item(**session.args, type="want", seller_id=seller_id, from_group_id=from_group_id)
-        await session.send('收购信息发布成功')
+    if cfm is 'y' or cfm is 't':
+        item = await data_source.add_item(**session.args, type="want", seller_id=seller_id, from_group_id=from_group_id)
+        await session.send('收购信息发布成功\n物品找到之后记得 @我 删掉物品信息哦')
+        if cfm is 't':
+            await push_item(item, type='want')
+    else:
+        await session.send('操作已取消')
 
 
 @user_want_item.args_parser
@@ -232,7 +248,9 @@ async def _(session: CommandSession):
 async def user_items(session: CommandSession):
     seller_id = session.ctx['user_id']
     items = await data_source.get_my_item(seller_id)
-    msg = await print_item_list(items)
+    if 'page' not in session.args.keys():
+        session.args['page'] = 1
+    msg = await print_item_list(items,page=session.args['page'])
     if not 'continue' in session.args.keys():
         await session.send(msg + message.find_item.item_list_msg)
         session.args['continue'] = True
@@ -245,7 +263,7 @@ async def user_items(session: CommandSession):
                 session.args.pop('continue')
             except Exception:
                 pass
-            await user_find_item(session)
+            await user_items(session)
             return
         elif '上一页' in cmd or 'n' in cmd:
             session.args['page'] -= 1
@@ -254,7 +272,7 @@ async def user_items(session: CommandSession):
                 session.args.pop('continue')
             except Exception:
                 pass
-            await user_find_item(session)
+            await user_items(session)
             return
         else:
             try:
@@ -276,7 +294,6 @@ async def _(session: CommandSession):
         session.finish()
     if session.current_key:
         session.args[session.current_key] = stripped_arg.split(" ")
-
     elif stripped_arg:
         split_arg = stripped_arg.split(" ")
         session.args['key_word'] = split_arg
@@ -353,6 +370,7 @@ async def update_item(session: CommandSession):
         await data_source.update_item(id, item_name, item_info)
         await session.send("信息修改成功！")
 
+
 @update_item.args_parser
 async def _(session: CommandSession):
     stripped_arg = session.current_arg_text.strip()
@@ -365,4 +383,45 @@ async def _(session: CommandSession):
         session.args['id'] = stripped_arg
 
 
+async def push_item(item, type):
+    if type is 'sell':
+        msg = "【推送】出旧物\n"
+    else:
+        msg = "【推送】收旧物\n"
+    msg += await print_item_info(item.id)
+    group_id = get_bot().config.SELL_GROUP
+    ctx = {'message_type': 'group', 'self_id': get_bot().config.ROBOT_ID, 'group_id': int(group_id)}
+    await get_bot().send(ctx, msg)
 
+
+@on_command('sell_help', aliases=("旧物帮助",))
+async def sell_help(session:CommandSession):
+    msg = '''
+你想淘旧物？@我 说：
+我想要[物品名称]
+---
+你有闲置物品？@我 说：
+谁想要[物品名称]
+---
+你想出旧物？@我 说:
+出[物品名称]
+---
+想发布收购信息？@我 说：
+收[物品名称]
+---
+查看自己发布的信息？@我 说：
+我的
+---
+删除或修改自己发布的信息？@我 说：
+删 [信息编号] 或 改 [信息编号]
+---
+例如：
+发布机械键盘：@我 出机械键盘
+想要找机械键盘：@我 我想要个超级厉害的机械键盘
+---
+tips：
+如果你不想打扰到他人，欢迎私聊我，私聊就不用 @我 了哦
+如果你觉得查找的关键字不精确，请用空格分隔关键词
+和我开始会话后，就不需要 @我 了，随时回复 q 退出会话
+    '''
+    await session.send(msg)

@@ -1,10 +1,10 @@
 from none import natural_language,NLPSession,NLPResult,on_natural_language
 from IAI.nlp.sellitem_nlp import get_item_nlp
-@on_natural_language('有谁想要',)
+@on_natural_language('谁想要',)
 async def _(session:NLPSession):
-    if '有谁想要' not in session.msg_text:
+    if '谁想要' not in session.msg_text:
         return
-    if session.msg_text.strip() == '有谁想要':
+    if session.msg_text.strip() == '谁想要':
         return NLPResult(90,'find_item',{'type':'want','key_word':None})
     elif ' ' in session.msg_text.strip():
         key_words = session.msg_text.strip().split()
@@ -29,6 +29,10 @@ async def _(session:NLPSession):
         return
     if session.msg_text.strip() == '我想要':
         return NLPResult(90,'find_item',{'type':'sell','key_word':None})
+    elif ' ' in session.msg_text.strip():
+        key_words = session.msg_text.strip().split()
+        key_words.pop(0)
+        return NLPResult(90, 'find_item', {'type': 'sell', 'key_word': key_words})
     else:
         key_words  = await get_item_nlp(session.msg_text)
         return NLPResult(90,'find_item', {'type': 'sell', 'key_word':key_words})

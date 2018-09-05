@@ -33,7 +33,13 @@ async def add_item(item_name, item_info, seller_id, type='sell', from_group_id=N
     session = DBSession()
     session.add(item)
     session.commit()
+    item = session.query(SellItem).filter(
+        SellItem.seller_id==seller_id,
+        SellItem.item_name == item_name,
+        SellItem.item_info == item_info,
+    ).first()
     session.close()
+    return item
 
 
 async def get_item_list(key_words=None, type="sell"):
