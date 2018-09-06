@@ -4,7 +4,6 @@ async def get_item_nlp(text):
     result = []
     for word in nrs['items']:
         if word['pos'] == 'n':
-            for i in word['basic_words']:
-                result.append(i)
+            result.append(word['item'])
 
     return result
