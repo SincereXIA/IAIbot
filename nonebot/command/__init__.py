@@ -1,42 +1,57 @@
 import asyncio
 import re
+import shlex
 from datetime import datetime
 from typing import (
-    Tuple, Union, Callable, Iterable, Dict, Any, Optional, Sequence
+    Tuple, Union, Callable, Iterable, Any, Optional, List, Dict,
+    Awaitable
 )
 
-from aiocqhttp.message import Message
+from nonebot import NoneBot, permission as perm
+from nonebot.command.argfilter import ValidateError
+from nonebot.helpers import context_id, send, render_expression
+from nonebot.log import logger
+from nonebot.message import Message
+from nonebot.session import BaseSession
+from nonebot.typing import (
+    Context_T, CommandName_T, CommandArgs_T, Message_T, State_T,
+    Filter_T
+)
 
-from . import NoneBot, permission as perm
-from .log import logger
-from .expression import render
-from .helpers import context_id, send_expr
-from .session import BaseSession
+# key: one segment of command name
+# value: subtree or a leaf Command object
+_registry = {}  # type: Dict[str, Union[Dict, Command]]
 
-# Key: str (one segment of command name)
-# Value: subtree or a leaf Command object
-_registry = {}
+# key: alias
+# value: real command name
+_aliases = {}  # type: Dict[str, CommandName_T]
 
-# Key: str
-# Value: tuple that identifies a command
-_aliases = {}
+# key: context id
+# value: CommandSession object
+_sessions = {}  # type: Dict[str, CommandSession]
 
-# Key: context id
-# Value: CommandSession object
-_sessions = {}
+CommandHandler_T = Callable[['CommandSession'], Any]
 
 
 class Command:
-    __slots__ = ('name', 'func', 'permission',
-                 'only_to_me', 'args_parser_func')
+    __slots__ = ('name', 'func',
+                 'permission',
+                 'only_to_me',
+                 'privileged',
+                 'args_parser_func')
 
-    def __init__(self, *, name: Tuple[str], func: Callable, permission: int,
-                 only_to_me: bool):
+    def __init__(self, *,
+                 name: CommandName_T,
+                 func: CommandHandler_T,
+                 permission: int,
+                 only_to_me: bool,
+                 privileged: bool):
         self.name = name
         self.func = func
         self.permission = permission
         self.only_to_me = only_to_me
-        self.args_parser_func = None
+        self.privileged = privileged
+        self.args_parser_func: Optional[CommandHandler_T] = None
 
     async def run(self, session, *,
                   check_perm: bool = True,
@@ -53,8 +68,40 @@ class Command:
         if self.func and has_perm:
             if dry:
                 return True
-            if self.args_parser_func:
-                await self.args_parser_func(session)
+
+            if session.current_arg_filters is not None and \
+                    session.current_key is not None:
+                # argument-level filters are given, use them
+                arg = session.current_arg
+                for f in session.current_arg_filters:
+                    try:
+                        res = f(arg)
+                        if isinstance(res, Awaitable):
+                            res = await res
+                        arg = res
+                    except ValidateError as e:
+                        # validation failed
+                        failure_message = e.message
+                        if failure_message is None:
+                            config = session.bot.config
+                            failure_message = render_expression(
+                                config.DEFAULT_VALIDATION_FAILURE_EXPRESSION
+                            )
+                        # noinspection PyProtectedMember
+                        session.pause(failure_message,
+                                      **session._current_send_kwargs)
+
+                # passed all filters
+                session.state[session.current_key] = arg
+            else:
+                # fallback to command-level args_parser_func
+                if self.args_parser_func:
+                    await self.args_parser_func(session)
+                if session.current_key is not None and \
+                        session.current_key not in session.state:
+                    # args_parser_func didn't set state, here we set it
+                    session.state[session.current_key] = session.current_arg
+
             await self.func(session)
             return True
         return False
@@ -71,10 +118,31 @@ class Command:
                                            self.permission)
 
 
-def on_command(name: Union[str, Tuple[str]], *,
-               aliases: Iterable = (),
+class CommandFunc:
+    __slots__ = ('cmd', 'func')
+
+    def __init__(self, cmd: Command, func: CommandHandler_T):
+        self.cmd = cmd
+        self.func = func
+
+    def __call__(self, session: 'CommandSession') -> Any:
+        return self.func(session)
+
+    def args_parser(self, parser_func: CommandHandler_T) -> CommandHandler_T:
+        """
+        Decorator to register a function as the arguments parser of
+        the corresponding command.
+        """
+        self.cmd.args_parser_func = parser_func
+        return parser_func
+
+
+def on_command(name: Union[str, CommandName_T], *,
+               aliases: Iterable[str] = (),
                permission: int = perm.EVERYBODY,
-               only_to_me: bool = True) -> Callable:
+               only_to_me: bool = True,
+               privileged: bool = False,
+               shell_like: bool = False) -> Callable:
     """
     Decorator to register a function as a command.
 
@@ -82,87 +150,59 @@ def on_command(name: Union[str, Tuple[str]], *,
     :param aliases: aliases of command name, for convenient access
     :param permission: permission required by the command
     :param only_to_me: only handle messages to me
+    :param privileged: can be run even when there is already a session
+    :param shell_like: use shell-like syntax to split arguments
     """
 
-    def deco(func: Callable) -> Callable:
+    def deco(func: CommandHandler_T) -> CommandHandler_T:
         if not isinstance(name, (str, tuple)):
             raise TypeError('the name of a command must be a str or tuple')
         if not name:
             raise ValueError('the name of a command must not be empty')
 
         cmd_name = (name,) if isinstance(name, str) else name
+
+        cmd = Command(name=cmd_name, func=func, permission=permission,
+                      only_to_me=only_to_me, privileged=privileged)
+        if shell_like:
+            async def shell_like_args_parser(session):
+                session.args['argv'] = shlex.split(session.current_arg)
+
+            cmd.args_parser_func = shell_like_args_parser
+
         current_parent = _registry
         for parent_key in cmd_name[:-1]:
             current_parent[parent_key] = current_parent.get(parent_key) or {}
             current_parent = current_parent[parent_key]
-        cmd = Command(name=cmd_name, func=func, permission=permission,
-                      only_to_me=only_to_me)
         current_parent[cmd_name[-1]] = cmd
+
         for alias in aliases:
             _aliases[alias] = cmd_name
 
-        def args_parser_deco(parser_func: Callable):
-            cmd.args_parser_func = parser_func
-            return parser_func
-
-        func.args_parser = args_parser_deco
-        return func
+        return CommandFunc(cmd, func)
 
     return deco
 
 
-class CommandGroup:
-    """
-    Group a set of commands with same name prefix.
-    """
-    __slots__ = ('basename', 'permission', 'only_to_me')
-
-    def __init__(self, name: Union[str, Tuple[str]],
-                 permission: Optional[int] = None, *,
-                 only_to_me: Optional[bool] = None):
-        self.basename = (name,) if isinstance(name, str) else name
-        self.permission = permission
-        self.only_to_me = only_to_me
-
-    def command(self, name: Union[str, Tuple[str]], *,
-                aliases: Optional[Iterable] = None,
-                permission: Optional[int] = None,
-                only_to_me: Optional[bool] = None) -> Callable:
-        sub_name = (name,) if isinstance(name, str) else name
-        name = self.basename + sub_name
-
-        kwargs = {}
-        if aliases is not None:
-            kwargs['aliases'] = aliases
-        if permission is not None:
-            kwargs['permission'] = permission
-        elif self.permission is not None:
-            kwargs['permission'] = self.permission
-        if only_to_me is not None:
-            kwargs['only_to_me'] = only_to_me
-        elif self.only_to_me is not None:
-            kwargs['only_to_me'] = self.only_to_me
-        return on_command(name, **kwargs)
-
-
-def _find_command(name: Union[str, Tuple[str]]) -> Optional[Command]:
+def _find_command(name: Union[str, CommandName_T]) -> Optional[Command]:
     cmd_name = (name,) if isinstance(name, str) else name
     if not cmd_name:
         return None
 
     cmd_tree = _registry
     for part in cmd_name[:-1]:
-        if part not in cmd_tree:
+        if part not in cmd_tree or not isinstance(cmd_tree[part], dict):
             return None
         cmd_tree = cmd_tree[part]
 
-    return cmd_tree.get(cmd_name[-1])
+    cmd = cmd_tree.get(cmd_name[-1])
+    return cmd if isinstance(cmd, Command) else None
 
 
-class _FurtherInteractionNeeded(Exception):
+class _PauseException(Exception):
     """
-    Raised by session.pause() indicating that the command should
-    enter interactive mode to ask the user for some arguments.
+    Raised by session.pause() indicating that the command session
+    should be paused to ask the user for some arguments.
     """
     pass
 
@@ -199,38 +239,108 @@ class SwitchException(Exception):
 
 
 class CommandSession(BaseSession):
-    __slots__ = ('cmd', 'current_key', 'current_arg', 'current_arg_text',
-                 'current_arg_images', 'args', '_last_interaction', '_running')
+    __slots__ = ('cmd',
+                 'current_key', 'current_arg_filters', '_current_send_kwargs',
+                 'current_arg', '_current_arg_text', '_current_arg_images',
+                 '_state', '_last_interaction', '_running')
 
-    def __init__(self, bot: NoneBot, ctx: Dict[str, Any], cmd: Command, *,
-                 current_arg: str = '', args: Optional[Dict[str, Any]] = None):
+    def __init__(self, bot: NoneBot, ctx: Context_T, cmd: Command, *,
+                 current_arg: str = '', args: Optional[CommandArgs_T] = None):
         super().__init__(bot, ctx)
         self.cmd = cmd  # Command object
-        self.current_key = None  # current key that the command handler needs
-        self.current_arg = None  # current argument (with potential CQ codes)
-        self.current_arg_text = None  # current argument without any CQ codes
-        self.current_arg_images = None  # image urls in current argument
-        self.refresh(ctx, current_arg=current_arg)
-        self.args = args or {}
+
+        # unique key of the argument that is currently requesting (asking)
+        self.current_key: Optional[str] = None
+
+        # initialize current argument filters
+        self.current_arg_filters: Optional[List[Filter_T]] = None
+
+        self._current_send_kwargs: Dict[str, Any] = {}
+
+        # initialize current argument
+        self.current_arg: str = ''  # with potential CQ codes
+        self._current_arg_text = None
+        self._current_arg_images = None
+        self.refresh(ctx, current_arg=current_arg)  # fill the above
+
+        self._state: State_T = {}
+        if args:
+            self._state.update(args)
+
         self._last_interaction = None  # last interaction time of this session
         self._running = False
 
     @property
-    def running(self):
+    def state(self) -> State_T:
+        """
+        State of the session.
+
+        This contains all named arguments and
+        other session scope temporary values.
+        """
+        return self._state
+
+    @property
+    def args(self) -> CommandArgs_T:
+        """Deprecated. Use `session.state` instead."""
+        return self.state
+
+    @property
+    def running(self) -> bool:
         return self._running
 
     @running.setter
-    def running(self, value):
+    def running(self, value) -> None:
         if self._running is True and value is False:
             # change status from running to not running, record the time
             self._last_interaction = datetime.now()
         self._running = value
 
     @property
-    def is_first_run(self):
+    def is_valid(self) -> bool:
+        """Check if the session is expired or not."""
+        if self.bot.config.SESSION_EXPIRE_TIMEOUT and \
+                self._last_interaction and \
+                datetime.now() - self._last_interaction > \
+                self.bot.config.SESSION_EXPIRE_TIMEOUT:
+            return False
+        return True
+
+    @property
+    def is_first_run(self) -> bool:
         return self._last_interaction is None
 
-    def refresh(self, ctx: Dict[str, Any], *, current_arg: str = '') -> None:
+    @property
+    def current_arg_text(self) -> str:
+        """
+        Plain text part in the current argument, without any CQ codes.
+        """
+        if self._current_arg_text is None:
+            self._current_arg_text = Message(
+                self.current_arg).extract_plain_text()
+        return self._current_arg_text
+
+    @property
+    def current_arg_images(self) -> List[str]:
+        """
+        Images (as list of urls) in the current argument.
+        """
+        if self._current_arg_images is None:
+            self._current_arg_images = [
+                s.data['url'] for s in Message(self.current_arg)
+                if s.type == 'image' and 'url' in s.data
+            ]
+        return self._current_arg_images
+
+    @property
+    def argv(self) -> List[str]:
+        """
+        Shell-like argument list, similar to sys.argv.
+        Only available while shell_like is True in on_command decorator.
+        """
+        return self.state.get('argv', [])
+
+    def refresh(self, ctx: Context_T, *, current_arg: str = '') -> None:
         """
         Refill the session with a new message context.
 
@@ -239,65 +349,56 @@ class CommandSession(BaseSession):
         """
         self.ctx = ctx
         self.current_arg = current_arg
-        current_arg_as_msg = Message(current_arg)
-        self.current_arg_text = current_arg_as_msg.extract_plain_text()
-        self.current_arg_images = [s.data['url'] for s in current_arg_as_msg
-                                   if s.type == 'image' and 'url' in s.data]
+        self._current_arg_text = None
+        self._current_arg_images = None
 
-    @property
-    def is_valid(self) -> bool:
-        """Check if the session is expired or not."""
-        if self._last_interaction and \
-                datetime.now() - self._last_interaction > \
-                self.bot.config.SESSION_EXPIRE_TIMEOUT:
-            return False
-        return True
-
-    def get(self, key: str, *, prompt: str = None,
-            prompt_expr: Union[str, Sequence[str], Callable] = None) -> Any:
+    def get(self, key: str, *,
+            prompt: Optional[Message_T] = None,
+            arg_filters: Optional[List[Filter_T]] = None,
+            **kwargs) -> Any:
         """
         Get an argument with a given key.
 
         If the argument does not exist in the current session,
-        a FurtherInteractionNeeded exception will be raised,
-        and the caller of the command will know it should keep
-        the session for further interaction with the user.
+        a pause exception will be raised, and the caller of
+        the command will know it should keep the session for
+        further interaction with the user.
 
         :param key: argument key
         :param prompt: prompt to ask the user
-        :param prompt_expr: prompt expression to ask the user
+        :param arg_filters: argument filters for the next user input
         :return: the argument value
-        :raise FurtherInteractionNeeded: further interaction is needed
         """
-        value = self.get_optional(key)
-        if value is not None:
-            return value
+        if key in self.state:
+            return self.state[key]
 
         self.current_key = key
-        # ask the user for more information
-        if prompt_expr is not None:
-            prompt = render(prompt_expr, key=key)
-        self.pause(prompt)
+        self.current_arg_filters = arg_filters
+        self._current_send_kwargs = kwargs
+        self.pause(prompt, **kwargs)
 
     def get_optional(self, key: str,
                      default: Optional[Any] = None) -> Optional[Any]:
-        """Simply get a argument with given key."""
-        return self.args.get(key, default)
+        """
+        Simply get a argument with given key.
 
-    def pause(self, message=None) -> None:
+        Deprecated. Use `session.state.get()` instead.
+        """
+        return self.state.get(key, default)
+
+    def pause(self, message: Optional[Message_T] = None, **kwargs) -> None:
         """Pause the session for further interaction."""
         if message:
-            asyncio.ensure_future(self.send(message))
-        raise _FurtherInteractionNeeded
+            asyncio.ensure_future(self.send(message, **kwargs))
+        raise _PauseException
 
-    def finish(self, message=None) -> None:
+    def finish(self, message: Optional[Message_T] = None, **kwargs) -> None:
         """Finish the session."""
         if message:
-            asyncio.ensure_future(self.send(message))
+            asyncio.ensure_future(self.send(message, **kwargs))
         raise _FinishException
 
-    # noinspection PyMethodMayBeStatic
-    def switch(self, new_ctx_message: Any) -> None:
+    def switch(self, new_ctx_message: Message_T) -> None:
         """
         Finish the session and switch to a new (fake) message context.
 
@@ -352,7 +453,7 @@ def parse_command(bot: NoneBot,
         return None, None
 
     logger.debug(f'Matched command start: '
-                 f'{matched_start}{"(space)" if not matched_start else ""}')
+                 f'{matched_start}{"(empty)" if not matched_start else ""}')
     full_command = cmd_string[len(matched_start):].lstrip()
 
     if not full_command:
@@ -389,7 +490,7 @@ def parse_command(bot: NoneBot,
     return cmd, ''.join(cmd_remained)
 
 
-async def handle_command(bot: NoneBot, ctx: Dict[str, Any]) -> bool:
+async def handle_command(bot: NoneBot, ctx: Context_T) -> bool:
     """
     Handle a message as a command.
 
@@ -399,27 +500,42 @@ async def handle_command(bot: NoneBot, ctx: Dict[str, Any]) -> bool:
     :param ctx: message context
     :return: the message is handled as a command
     """
+    cmd, current_arg = parse_command(bot, str(ctx['message']).lstrip())
+    is_privileged_cmd = cmd and cmd.privileged
+    if is_privileged_cmd and cmd.only_to_me and not ctx['to_me']:
+        is_privileged_cmd = False
+    disable_interaction = is_privileged_cmd
+
+    if is_privileged_cmd:
+        logger.debug(f'Command {cmd.name} is a privileged command')
+
     ctx_id = context_id(ctx)
 
-    # wait for 1.5 seconds (at most) if the current session is running
-    retry = 5
-    while retry > 0 and _sessions.get(ctx_id) and _sessions[ctx_id].running:
-        retry -= 1
-        await asyncio.sleep(0.3)
+    if not is_privileged_cmd:
+        # wait for 1.5 seconds (at most) if the current session is running
+        retry = 5
+        while retry > 0 and \
+                _sessions.get(ctx_id) and _sessions[ctx_id].running:
+            retry -= 1
+            await asyncio.sleep(0.3)
 
     check_perm = True
-    session = _sessions.get(ctx_id)
+    session = _sessions.get(ctx_id) if not is_privileged_cmd else None
     if session:
         if session.running:
             logger.warning(f'There is a session of command '
                            f'{session.cmd.name} running, notify the user')
-            asyncio.ensure_future(
-                send_expr(bot, ctx, bot.config.SESSION_RUNNING_EXPRESSION))
+            asyncio.ensure_future(send(
+                bot, ctx,
+                render_expression(bot.config.SESSION_RUNNING_EXPRESSION)
+            ))
             # pretend we are successful, so that NLP won't handle it
             return True
 
         if session.is_valid:
             logger.debug(f'Session of command {session.cmd.name} exists')
+            # since it's in a session, the user must be talking to me
+            ctx['to_me'] = True
             session.refresh(ctx, current_arg=str(ctx['message']))
             # there is no need to check permission for existing session
             check_perm = False
@@ -431,7 +547,6 @@ async def handle_command(bot: NoneBot, ctx: Dict[str, Any]) -> bool:
             session = None
 
     if not session:
-        cmd, current_arg = parse_command(bot, str(ctx['message']).lstrip())
         if not cmd:
             logger.debug('Not a known command, ignored')
             return False
@@ -441,13 +556,14 @@ async def handle_command(bot: NoneBot, ctx: Dict[str, Any]) -> bool:
         session = CommandSession(bot, ctx, cmd, current_arg=current_arg)
         logger.debug(f'New session of command {session.cmd.name} created')
 
-    return await _real_run_command(session, ctx_id, check_perm=check_perm)
+    return await _real_run_command(session, ctx_id, check_perm=check_perm,
+                                   disable_interaction=disable_interaction)
 
 
-async def call_command(bot: NoneBot, ctx: Dict[str, Any],
-                       name: Union[str, Tuple[str]], *,
+async def call_command(bot: NoneBot, ctx: Context_T,
+                       name: Union[str, CommandName_T], *,
                        current_arg: str = '',
-                       args: Optional[Dict[str, Any]] = None,
+                       args: Optional[CommandArgs_T] = None,
                        check_perm: bool = True,
                        disable_interaction: bool = False) -> bool:
     """
@@ -489,9 +605,25 @@ async def _real_run_command(session: CommandSession,
     try:
         logger.debug(f'Running command {session.cmd.name}')
         session.running = True
-        res = await session.cmd.run(session, **kwargs)
-        raise _FinishException(res)
-    except _FurtherInteractionNeeded:
+        future = asyncio.ensure_future(session.cmd.run(session, **kwargs))
+        timeout = None
+        if session.bot.config.SESSION_RUN_TIMEOUT:
+            timeout = session.bot.config.SESSION_RUN_TIMEOUT.total_seconds()
+
+        try:
+            await asyncio.wait_for(future, timeout)
+            handled = future.result()
+        except asyncio.TimeoutError:
+            handled = True
+        except (_PauseException, _FinishException, SwitchException) as e:
+            raise e
+        except Exception as e:
+            logger.error(f'An exception occurred while '
+                         f'running command {session.cmd.name}:')
+            logger.exception(e)
+            handled = True
+        raise _FinishException(handled)
+    except _PauseException:
         session.running = False
         if disable_interaction:
             # if the command needs further interaction, we view it as failed
@@ -521,3 +653,18 @@ async def _real_run_command(session: CommandSession,
             logger.debug(f'Session of command {session.cmd.name} switching, '
                          f'new context message: {e.new_ctx_message}')
             raise e  # this is intended to be propagated to handle_message()
+
+
+def kill_current_session(ctx: Context_T) -> None:
+    """
+    Force kill current session of the given context,
+    despite whether it is running or not.
+
+    :param ctx: message context
+    """
+    ctx_id = context_id(ctx)
+    if ctx_id in _sessions:
+        del _sessions[ctx_id]
+
+
+from nonebot.command.group import CommandGroup

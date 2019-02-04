@@ -1,5 +1,5 @@
-from none import on_command,on_natural_language, NLPSession, NLPResult
-from none import CommandSession,get_bot
+from nonebot import on_command,on_natural_language, NLPSession, NLPResult
+from nonebot import CommandSession,get_bot
 from .data_source import getClassInfo, getRecentClassInfo,get_session_week
 from datetime import datetime
 from IAI.setup import *

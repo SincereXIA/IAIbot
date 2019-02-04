@@ -1,4 +1,4 @@
-from none import natural_language,NLPSession,NLPResult,on_natural_language,get_bot
+from nonebot import natural_language,NLPSession,NLPResult,on_natural_language,get_bot
 from IAI.nlp.sellitem_nlp import get_item_nlp
 @on_natural_language('谁想要',only_to_me=False)
 async def _(session:NLPSession):

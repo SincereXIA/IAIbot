@@ -1,9 +1,9 @@
 {
   "scripts": {
-    "docs:dev": "vuepress dev docs",
+    "docs:dev": "vuepress dev -h 0.0.0.0 -p 9090 --debug docs",
     "docs:build": "vuepress build docs"
   },
   "devDependencies": {
-    "vuepress": "^0.14.1"
+    "vuepress": "^0.14.8"
   }
 }

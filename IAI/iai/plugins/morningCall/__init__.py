@@ -1,5 +1,5 @@
-import none
-from none import session, CommandSession, on_command, get_bot
+import nonebot
+from nonebot import session, CommandSession, on_command, get_bot
 from . import data_source, message
 from IAI.iai.plugins.weather.data_source import get_today_weather_info
 from datetime import datetime

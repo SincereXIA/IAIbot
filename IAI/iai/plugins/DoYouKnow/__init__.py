@@ -1,5 +1,5 @@
-import none
-from none import on_command,CommandSession
+import nonebot
+from nonebot import on_command,CommandSession
 from . import data_source
 import random
 

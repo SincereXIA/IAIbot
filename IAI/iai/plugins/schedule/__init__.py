@@ -2,12 +2,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from IAI.iai.plugins.CurriculumSchedule import data_source
 from datetime import datetime, date
 from IAI.setup import *
-import none
-import none.command
+import nonebot as none
+import nonebot.command
 from IAI import DBdriver
 import time
 import random
-from none import scheduler
+from nonebot import scheduler
 from IAI.iai.common.GroupInfo import get_all_group_info
 
 

@@ -1,4 +1,4 @@
-from none import on_command,CommandSession
+from nonebot import on_command,CommandSession
 from . import data_source,message
 
 @on_command('del_homework', aliases=("删作业",))

@@ -1,6 +1,6 @@
 import requests
 import json
-from none import get_bot
+from nonebot import get_bot
 from datetime import datetime, timedelta
 
 weather_results = {}

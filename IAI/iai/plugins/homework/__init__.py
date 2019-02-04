@@ -1,4 +1,4 @@
-from none import on_command, CommandSession, get_bot, on_natural_language, NLPSession, NLPResult
+from nonebot import on_command, CommandSession, get_bot, on_natural_language, NLPSession, NLPResult
 from IAI.iai.plugins.homework.data_source import get_homework_info, Homework, add_homework_info
 from datetime import date,datetime
 from IAI.nlp.datetime_nlp import date_nlp

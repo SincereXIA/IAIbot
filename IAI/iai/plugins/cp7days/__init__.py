@@ -4,7 +4,7 @@ import json
 import IAI.iai.plugins.cp7days.data_source as data_source
 
 
-@on_command('cp7days', aliases=('一周',))
+#@on_command('cp7days', aliases=('一周',))
 async def cp7days(session:CommandSession):
     bot = get_bot()
     url = f'http://{bot.config.IP_ADDRESS}:{bot.config.IP_PORT}/get_stranger_info'

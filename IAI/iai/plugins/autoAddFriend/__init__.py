@@ -1,4 +1,4 @@
-from none import on_request,RequestSession,get_bot,on_notice,NoticeSession,\
+from nonebot import on_request,RequestSession,get_bot,on_notice,NoticeSession,\
     on_command, CommandSession
 import time
 import random
@@ -26,15 +26,6 @@ async def _(session: RequestSession):
         pass
 
     msg = f'''真好呀，你没有错过我。
-
-正在开放：月饼节试吃活动
-
-.......
-
-回复：试吃
-或发送好友给你的口令
-报名参加本次活动
-
 感谢相遇。祝好 ：）'''
     ctx = {'message_type': 'private', 'self_id': bot.config.ROBOT_ID, 'user_id': session.ctx['user_id']}
     await bot.send(ctx, msg)
@@ -60,17 +51,6 @@ async def _(session: RequestSession):
         pass
 
     msg = f'''真好呀，你没有错过我。
-
-正在开放：月饼节试吃活动
-
-.......
-
-转发给我【好友送给你的 福利口令 】
-参加本次活动吧！
-
-不是来自好友推荐？回复：试吃
-报名参加本次活动。
-
 感谢相遇。祝好 ：）'''
     await session.send(msg)
 
@@ -167,7 +147,7 @@ async def group_refresh(session:CommandSession):
     await get_bot().send(ctx, msg)
 
 
-@on_command('invite_from_user',aliases=('试吃','【内参试吃】','我要试吃'))
+#@on_command('invite_from_user',aliases=('试吃','【内参试吃】','我要试吃'))
 async def invite_from_user(session:CommandSession):
     qq_id = session.ctx['user_id']
     invite_by = session.get('invite_by',prompt=f'''
@@ -203,7 +183,7 @@ async def invite_other(qq_id):
 via: 「{encodenum(qq_id)}」
     '''
 
-@invite_from_user.args_parser
+#@invite_from_user.args_parser
 async def _(session: CommandSession):
     stripped_arg = session.current_arg_text.strip()
     if session.current_key:

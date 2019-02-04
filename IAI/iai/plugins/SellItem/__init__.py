@@ -1,6 +1,6 @@
 import re
 
-from none import on_command, CommandSession, get_bot, NLPResult
+from nonebot import on_command, CommandSession, get_bot, NLPResult
 from datetime import datetime
 from . import message
 from . import data_source

@@ -1,17 +1,25 @@
-from none import (
+from nonebot import (
     CommandSession, CommandGroup,
     on_natural_language, NLPSession, NLPResult
 )
+from nonebot.helpers import render_expression as __
 
-from . import expressions as expr
+from . import expressions as e
+
+__plugin_name__ = '天气'
+__plugin_usage__ = r"""
+天气功能使用帮助
+
+天气  [城市名称]
+""".strip()
 
 w = CommandGroup('weather')
 
 
 @w.command('weather', aliases=('天气', '天气预报'))
 async def weather(session: CommandSession):
-    city = session.get('city', prompt_expr=expr.WHICH_CITY)
-    await session.send_expr(expr.REPORT, city=city)
+    city = session.get('city', prompt=__(e.WHICH_CITY))
+    await session.send(__(e.REPORT, city=city))
 
 
 @weather.args_parser

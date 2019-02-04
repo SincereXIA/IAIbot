@@ -1,8 +1,8 @@
 # coding=utf-8
 
 
-from none import on_command, CommandSession, get_bot
-from none import on_natural_language, NLPSession, NLPResult
+from nonebot import on_command, CommandSession, get_bot
+from nonebot import on_natural_language, NLPSession, NLPResult
 from .data_source import get_weather_of_city, get_weather_of_city_HF, should_forecast, get_forecast
 from jieba import posseg
 from . import data_source

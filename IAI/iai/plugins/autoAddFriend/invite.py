@@ -1,4 +1,4 @@
-from none import get_bot,CommandSession,on_command
+from nonebot import get_bot,CommandSession,on_command
 import requests
 import json
 from . import data_source
