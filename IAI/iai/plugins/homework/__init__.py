@@ -6,14 +6,17 @@ from IAI.nlp.homework_nlp import get_subject_name
 import IAI.iai.plugins.homework.message as bot_message
 from IAI.iai.common.QQUser import get_user_group, get_user
 import time
+from .delhomework import *
 
 
 @on_command('homework', aliases=('作业是啥', '今日作业'), only_to_me=False)
 async def homework(session: CommandSession):
+    msg = ""
     try:
         bot = get_bot()
         if 'group_id' not in session.ctx.keys():
-            group_id = bot.config.DEFAULT_GROUP
+            group_id = await get_user_group(session.ctx['user_id'])
+            msg += f"群 {group_id} "
         else:
             group_id = session.ctx['group_id']
 
@@ -21,7 +24,7 @@ async def homework(session: CommandSession):
         if 'subjects' in session.args.keys():
             subjects = session.args['subjects']
         localdate = date.today()
-        await session.send(await homework_info(group_id, localdate, subjects=subjects))
+        await send_homework_info(group_id, localdate, subjects=subjects,session = session)
     except Exception as e:
         await session.send('糟糕，运行出错了，错误信息：' + str(e))
 
@@ -44,11 +47,7 @@ async def add_homework(session: CommandSession):
     end_date = session.get('end_date', prompt=bot_message.add_homework_msg.end_date_msg)
     try:
         end_date = await date_nlp(end_date)
-        if end_date < datetime.now():
-            await session.send('你不能添加一个 DDL 小于今日的作业，请重新输入截止日期')
-            session.args.pop('end_date')
-            time.sleep(1)
-            session.pause()
+        assert end_date > datetime.now()
     except Exception as e:
         await session.send('输入的信息有误，错误信息：'+str(e)+'请重新输入')
         session.args.pop('end_date')
@@ -98,9 +97,9 @@ async def _(session: CommandSession):
         session.args[session.current_key] = stripped_arg
 
 
-async def homework_info(group_id, localdate: date, subjects=None) -> str:
+async def send_homework_info(group_id, localdate: date, subjects=None,session = None) -> str:
     """
-    根据群号码，日期，获取可供打印的作业信息
+    根据群号码，日期，分段发送作业信息
     :param group_id: 群号码
     :param localdate: 日期
     :param subjects: 科目
@@ -115,9 +114,18 @@ async def homework_info(group_id, localdate: date, subjects=None) -> str:
     homeworks = await get_homework_info(group_id, localdate, subjects)
     if not homeworks:
         result += bot_message.get_homework_msg.no_homework_msg
+        await session.send(result)
     else:
-        result += print_homework_info(homeworks)
-    return str(result)
+        if not session:
+            result += print_homework_info(homeworks)
+            return str(result)
+        else:
+            pages = len(homeworks)//5 + bool(len(homeworks)%5)
+            for page in range(pages):
+                rs = result + print_homework_info(homeworks[5*page:5*page+5])
+                await session.send(rs)
+
+
 
 
 @on_natural_language('作业', only_to_me=False, only_short_message=True)
@@ -138,6 +146,7 @@ def print_homework_info(homeworks):
         end_date_msg = str(homework.end_date.month) + '月' + str(homework.end_date.day) + ' 日，星期' + \
                        ['一', '二', '三', '四', '五', '六', '日'][homework.end_date.weekday()]
         result += bot_message.get_homework_msg.homework_msg.format(
+            id = homework.id,
             subject_name=homework.subject_name,
             content=homework.content,
             end_date=end_date_msg,

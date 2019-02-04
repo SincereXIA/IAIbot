@@ -31,17 +31,13 @@ async def get_group_info(group_id) -> GroupInfo:
 
 
 async def add_group_info(group_id, group_name, last_weather_notify=None,
-                         is_morningcall_on=True, is_curriculumschedule_on=True,
-                         is_weather_notify_on=True, is_homework_daily_on=True):
+                         is_morningcall_on=False, is_curriculumschedule_on=False,
+                         is_weather_notify_on=False, is_homework_daily_on=False):
     session = DBSession()
     group = session.query(GroupInfo).filter(GroupInfo.group_id == group_id).first()
     if group:
         group.group_id = group_id
         group.group_name = group_name
-        group.is_morningcall_on = False
-        group.is_curriculumschedule_on = False
-        group.is_weather_notify_on = False
-        group.is_homework_daily_on = False
         session.merge(group)
         session.commit()
         session.close()

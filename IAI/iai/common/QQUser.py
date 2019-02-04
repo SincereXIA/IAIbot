@@ -2,6 +2,9 @@ from sqlalchemy import Integer, Column, Boolean, VARCHAR, Date, DATETIME
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime
+from none import get_bot
+import requests
+import json
 
 # 创建对象的基类:
 Base = declarative_base()
@@ -34,3 +37,10 @@ async def get_user(qq_id):
     qqUser = session.query(QQUser).filter(QQUser.qq_id == qq_id).first()
     session.close()
     return qqUser
+
+async def get_qq_user_info(qq_id):
+    bot = get_bot()
+    url = f'http://{bot.config.IP_ADDRESS}:{bot.config.IP_PORT}/get_stranger_info'
+    re = requests.get(url, {'user_id': qq_id})
+    userinfo = json.loads(re.text)['data']
+    return userinfo

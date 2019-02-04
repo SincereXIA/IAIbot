@@ -71,3 +71,15 @@ async def add_homework_info(group_id, subject_name, content, end_date,
         Homework.add_by == add_by).first()
     session.close()
     return homework
+
+async def get_homework_info_by_id(id):
+    session = DBSession()
+    homework = session.query(Homework).filter(Homework.id == id).first()
+    session.close()
+    return homework
+
+async def del_homework(id):
+    session = DBSession()
+    session.query(Homework).filter(Homework.id == id).delete()
+    session.commit()
+    session.close()

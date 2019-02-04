@@ -55,11 +55,11 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
     # 获取当前周
     localtime = datetime.now()
     # 为未定义课程时间生成时间
-    summer_time = [time(8, 30), time(10, 25), time(14, 30), time(16, 25), time(19, 00), ]
-    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(16, 55), time(18, 30), ]
+    summer_time = [time(8, 30), time(10, 25), time(14, 30), time(16, 25), time(19, 30), ]
+    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(15, 55), time(19, 00), ]
 
     for curriculum in curriculums:
-        if not curriculum.start_time:
+        #if not curriculum.start_time:
             if localtime.month < 10:
                 curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
             else:
@@ -85,11 +85,11 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
     session.close()
 
     # 为未定义课程时间生成时间
-    summer_time = [time(8, 30), time(10, 25), time(14, 30), time(16, 25), time(19, 00), ]
-    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(16, 55), time(18, 30), ]
+    summer_time = [time(8, 30), time(10, 25), time(14, 30), time(16, 25), time(19, 30), ]
+    winter_time = [time(8, 30), time(10, 25), time(14, 00), time(15, 55), time(19, 00), ]
 
     for curriculum in curriculums:
-        if not curriculum.start_time:
+        #if not curriculum.start_time:
             if localtime.month < 10:
                 curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
             else:

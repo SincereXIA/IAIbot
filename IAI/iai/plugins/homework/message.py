@@ -45,8 +45,21 @@ class get_homework_msg:
 关于 {subject} 有以下作业信息：
     '''
     homework_msg = '''
-【{subject_name}】
+{id}【{subject_name}】
 作业: {content}
 收取：{assign_for}
 DDL: {end_date}
     '''
+
+class del_homework_msg:
+    confirm = '''
+科目: {subject_name}
+作业: {content}
+收取：{assign_for}
+DDL: {end_date}
+
+----
+>> 确认删除吗？
+删除此作业请回复: 'y'
+取消操作请回复：'n'
+        '''

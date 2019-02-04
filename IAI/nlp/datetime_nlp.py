@@ -14,6 +14,8 @@ async def date_nlp(text:str):
         time = localtime
         result = {}
         result['debug_info'] = ""
+        if '下周' in nrs['text'] or '下星期' in nrs['text']:
+            time = time + timedelta(days=7)
         for item in nrs['items']:
             if item['ne'] == 'TIME':
                 result['debug_info'] += str(item)
@@ -22,8 +24,6 @@ async def date_nlp(text:str):
                         time = time + timedelta(days=1)
                     if '后' in word:
                         time = time + timedelta(days=2)
-                    if '下周' in word or '下星期' in word:
-                        time = time + timedelta(days=7)
                     weekdaynum = [1, 2, 3, 4, 5, 6, 7]
                     weekdayhz = ['一', '二', '三', '四', '五', '六', '日', ]
                     weekday = [0, 1, 2, 3, 4, 5, 6]
