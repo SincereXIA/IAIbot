@@ -108,6 +108,7 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
     # 筛选
     result = []
     for curriculum in curriculums:
+        curriculum.group_name = [curriculum.group_name]
         if curriculum.start_time.strftime("%H%M%S") >= localtime.strftime("%H%M%S"):
             if timeLimit:
                 if curriculum.start_time.strftime("%H%M%S") <= \
