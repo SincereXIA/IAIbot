@@ -1,9 +1,11 @@
 from IAI.nlp import client
 from datetime import datetime
 from . import datetime_nlp
+import nonebot
 async def curriculum_nlp(text):
     nrs = client.lexer(text)
-    curriculumStart = datetime(2018, 9, 3)  # todo 自定义设置
+    [year, month, day] = nonebot.get_bot().config.SEMESTER_START.split('-')
+    curriculumStart = datetime(int(year), int(month), int(day))
     result ={}
     time = await datetime_nlp.date_nlp(text)
     result['week'] = (int(time.strftime("%j")) - int(curriculumStart.strftime("%j")))//7 + 1

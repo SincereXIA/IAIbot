@@ -66,7 +66,7 @@ async def ClassInfo(week, weekday, group_id, classnums = None,from_schedule = Fa
             if info.group_name != group_name:
                 group_name = info.group_name
                 result += f'''
-┌───    {info.group_name}'''
+┌───    {" ".join(name for name in info.group_name)}'''
             result+=f'''
 │    ☛ 第 {class_num[info.class_num-1]} 节
 │    【{info.class_name}】

@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime, timedelta, time
 from sqlalchemy import and_, or_
+import nonebot
 
 # 创建对象的基类:
 Base = declarative_base()
@@ -37,6 +38,7 @@ def getClassInfoFromTime(time: datetime, group_id, classnums=None) -> list:
     week = get_session_week(time)
     return getClassInfo(week, weekday, group_id, classnums)
 
+
 def getClassInfo(week, weekday, group_id, classnums) -> list:
     session = DBSession()
     curriculums = []
@@ -59,13 +61,21 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
     winter_time = [time(8, 30), time(10, 25), time(14, 00), time(15, 55), time(19, 00), ]
 
     for curriculum in curriculums:
-        #if not curriculum.start_time:
-            if localtime.month < 10:
-                curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
-            else:
-                curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
-
-    return curriculums
+        curriculum.group_name = [curriculum.group_name]
+        # if not curriculum.start_time:
+        if localtime.month < 10:
+            curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
+        else:
+            curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
+    merge_curriculums = []
+    for i in range(len(curriculums) - 1):
+        if curriculums[i].class_name == curriculums[i + 1].class_name and \
+                curriculums[i].class_num == curriculums[i + 1].class_num:
+            curriculums[i + 1].group_name.extend(curriculums[i].group_name)
+        else:
+            merge_curriculums.append(curriculums[i])
+    merge_curriculums.append(curriculums[len(curriculums)-1])
+    return merge_curriculums
 
 
 async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
@@ -81,7 +91,7 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
         Curriculum.weekday == localtime.weekday() + 1,
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
-    ).order_by(Curriculum.group_name,Curriculum.class_num).all()
+    ).order_by(Curriculum.group_name, Curriculum.class_num).all()
     session.close()
 
     # 为未定义课程时间生成时间
@@ -89,11 +99,11 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
     winter_time = [time(8, 30), time(10, 25), time(14, 00), time(15, 55), time(19, 00), ]
 
     for curriculum in curriculums:
-        #if not curriculum.start_time:
-            if localtime.month < 10:
-                curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
-            else:
-                curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
+        # if not curriculum.start_time:
+        if localtime.month < 10:
+            curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
+        else:
+            curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
 
     # 筛选
     result = []
@@ -105,11 +115,23 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
                     result.append(curriculum)
             else:
                 result.append(curriculum)
-    return result
+
+    merge_curriculums = []
+    for i in range(len(result) - 1):
+        if result[i].class_name == result[i + 1].class_name and \
+                result[i].class_num == result[i + 1].class_num:
+            result[i + 1].group_name.extend(result[i].group_name)
+        else:
+            merge_curriculums.append(result[i])
+
+    merge_curriculums.append(result[len(result) - 1])
+    return merge_curriculums
 
 
 def get_session_week(localtime):
-    curriculumStart = datetime(2018, 9, 3)
+    # curriculumStart = datetime(2019, 2, 25)
+    [year, month, day] = nonebot.get_bot().config.SEMESTER_START.split('-')
+    curriculumStart = datetime(int(year), int(month), int(day))
     week = (int(localtime.strftime("%j")) -
             int(curriculumStart.strftime("%j"))) // 7 + 1
     return week

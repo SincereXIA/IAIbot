@@ -4,7 +4,8 @@ from . import data_source, message
 from IAI.iai.plugins.weather.data_source import get_today_weather_info
 from datetime import datetime
 from IAI.iai.common.QQUser import get_user_group
-from IAI.iai.plugins.DoYouKnow.data_source import get_one_content
+from IAI.iai.plugins.DoYouKnow.data_source import get_one_content,get_news
+from IAI.iai.plugins.DoYouKnow import news_msg
 
 
 @on_command('morning_call')
@@ -69,3 +70,9 @@ async def one_msg():
     —— {data['info']}
         '''
     return msg
+
+
+@on_command('news')
+async def one(session: CommandSession):
+    msg = await news_msg()
+    await session.send(msg)
