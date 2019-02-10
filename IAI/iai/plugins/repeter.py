@@ -31,12 +31,12 @@ async def _(session: NLPSession):
         records[group_ctx_id] = record
         return
 
-    if record.last_msg != msg or record.last_user_id == user_id:
+    if record.last_msg != msg: #or record.last_user_id == user_id:
         return
 
     record.last_user_id = user_id
     record.repeat_count += 1
-    if record.repeat_count == 3:
+    if record.repeat_count % 2 == 0:
         return IntentCommand(
             random.randint(0, 1) * 90.0,
             'delayed_echo',

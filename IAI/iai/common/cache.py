@@ -8,8 +8,14 @@ def init() -> None:
     """
     bot = get_bot()
     caches.set_config({
-        'default': bot.config.AIOCACHE_DEFAULT_CONFIG
+        'default': {
+        'cache': "aiocache.SimpleMemoryCache",
+        'serializer': {
+            'class': "aiocache.serializers.StringSerializer"
+            }
+        }
     })
+    print("cache module initialize OK")
 
 
 def cached(*args, **kwargs):
