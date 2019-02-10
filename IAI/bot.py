@@ -4,6 +4,9 @@ import setup
 import os
 
 import nonebot as none
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+
 import IAI.iai.common.cache as cache
 
 
