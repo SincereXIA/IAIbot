@@ -19,7 +19,7 @@ setup(
     packages=packages,
     data_files=stub_files,
     install_requires=['aiocqhttp>=0.6.7', 'aiocache>=0.10', 'apscheduler', 'sqlalchemy', 'baidu-aip', 'jieba', 'requests',
-                      'mysql-connector','tushare'],
+                      'mysql-connector'],
     extras_require={
         'scheduler': ['apscheduler>=1.2'],
     },
