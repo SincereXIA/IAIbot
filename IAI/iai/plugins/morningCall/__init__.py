@@ -31,9 +31,6 @@ async def one(session: CommandSession):
     classes = await data_source.get_today_class_info(group_id)
     group_name = ""
     for c in classes:
-        if c['group_name'] != group_name:
-            group_name = c['group_name']
-            class_info += f'\n---\n{group_name}'
         class_info += message.morningcall_class_msg.format(
             class_num=c['class_num'],
             class_name=c['class_name']
