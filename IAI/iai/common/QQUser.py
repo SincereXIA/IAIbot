@@ -2,7 +2,7 @@ from sqlalchemy import Integer, Column, Boolean, VARCHAR, Date, DATETIME
 from sqlalchemy.ext.declarative import declarative_base
 from IAI.DBdriver import DBSession
 from datetime import datetime
-from none import get_bot
+from nonebot import get_bot
 import requests
 import json
 
