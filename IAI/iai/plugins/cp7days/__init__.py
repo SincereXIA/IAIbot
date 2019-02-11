@@ -1,4 +1,4 @@
-from none import on_command,CommandSession,get_bot
+from nonebot import on_command,CommandSession,get_bot
 import requests
 import json
 import IAI.iai.plugins.cp7days.data_source as data_source

@@ -1,5 +1,5 @@
-from none import on_command,CommandSession
-import none
+from nonebot import on_command,CommandSession
+import nonebot
 @on_command('test')
 async def test(session:CommandSession):
     print(str(none._plugins))
