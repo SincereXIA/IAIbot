@@ -45,6 +45,12 @@ async def MorningCall():
             await none.command.call_command(none.get_bot(), ctx, "morning_call", )
 
 
+@scheduler.scheduled_job('cron', day_of_week='mon-sun', hour=7, minute=30, )
+async def MorningLoveCall():
+    ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': nonebot.get_bot().config.LOVE_GROUP}
+    await none.command.call_command(none.get_bot(), ctx, "morning_love", )
+
+
 @scheduler.scheduled_job('cron', day_of_week='mon-fri', hour=19, minute=00, )
 async def HomeworkEveryday():
     for group in await get_all_group_info():

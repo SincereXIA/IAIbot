@@ -74,7 +74,9 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
             curriculums[i + 1].group_name.extend(curriculums[i].group_name)
         else:
             merge_curriculums.append(curriculums[i])
-    merge_curriculums.append(curriculums[len(curriculums)-1])
+
+    if curriculums:
+        merge_curriculums.append(curriculums[len(curriculums)-1])
     return merge_curriculums
 
 
@@ -128,7 +130,8 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
         else:
             merge_curriculums.append(result[i])
 
-    merge_curriculums.append(result[len(result) - 1])
+    if result:
+        merge_curriculums.append(result[len(result) - 1])
     return merge_curriculums
 
 

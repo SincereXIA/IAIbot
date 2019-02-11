@@ -181,6 +181,7 @@ async def get_today_weather_info(city):
     info['tmp_min'] = weather['today_forecast']['tmp_min']
     info['comf'] = weather['lifestyle'][0]['txt']
     info['drsg'] = weather['lifestyle'][1]['txt']
+    info['uv'] = weather['lifestyle'][5]['txt']
 
     return info
 
