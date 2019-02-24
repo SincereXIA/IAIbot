@@ -31,7 +31,7 @@ async def get_group_info(group_id) -> GroupInfo:
 
 
 async def add_group_info(group_id, group_name, last_weather_notify=None,
-                         is_morningcall_on=False, is_curriculumschedule_on=False,
+                         is_morningcall_on=False, is_curriculumschedule_on=True,
                          is_weather_notify_on=False, is_homework_daily_on=False):
     session = DBSession()
     group = session.query(GroupInfo).filter(GroupInfo.group_id == group_id).first()

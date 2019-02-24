@@ -63,7 +63,7 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
     for curriculum in curriculums:
         curriculum.group_name = [curriculum.group_name]
         # if not curriculum.start_time:
-        if localtime.month < 10:
+        if 10 > localtime.month >= 5:
             curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
         else:
             curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
@@ -102,7 +102,7 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
 
     for curriculum in curriculums:
         # if not curriculum.start_time:
-        if localtime.month < 10:
+        if 10 > localtime.month >= 5:
             curriculum.start_time = summer_time[int(curriculum.class_num) - 1]
         else:
             curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
