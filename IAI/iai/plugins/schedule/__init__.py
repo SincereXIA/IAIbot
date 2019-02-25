@@ -11,12 +11,12 @@ from nonebot import scheduler
 from IAI.iai.common.GroupInfo import get_all_group_info
 
 
-@scheduler.scheduled_job('interval', minutes=5)
+@scheduler.scheduled_job('interval', seconds=10)
 async def Curriculum():
     now = datetime.now()
     for group in await get_all_group_info():
         if group.is_curriculumschedule_on:
-            classInfos = await data_source.getRecentClassInfo(now, group.group_id, 30)
+            classInfos = await data_source.getRecentClassInfo(now, group.group_id, 30, from_schedule=True)
             if not classInfos:
                 continue
             should_notify = False
@@ -26,8 +26,11 @@ async def Curriculum():
                     notify_date = date(now.year, now.month, now.day)
                     classInfo.last_notify_date = notify_date
                     session = DBdriver.DBSession()
-                    session.merge(classInfo)
-                    session.commit()
+                    try:
+                        session.merge(classInfo)
+                        session.commit()
+                    except Exception:
+                        session.rollback()
                     session.close()
             if should_notify:
                 ctx = {'message_type': 'group', 'self_id': ROBOT_ID, 'group_id': group.group_id}

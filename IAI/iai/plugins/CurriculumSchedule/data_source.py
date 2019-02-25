@@ -4,6 +4,7 @@ from IAI.DBdriver import DBSession
 from datetime import datetime, timedelta, time
 from sqlalchemy import and_, or_
 import nonebot
+import copy
 
 # 创建对象的基类:
 Base = declarative_base()
@@ -83,7 +84,7 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
     return merge_curriculums
 
 
-async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
+async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None, from_schedule = False):
     # 获取当前周
     localtime = datetime.now()
     week = get_session_week(localtime)
@@ -111,9 +112,24 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
         else:
             curriculum.start_time = winter_time[int(curriculum.class_num) - 1]
 
+    curriculums_cpy = copy.deepcopy(curriculums)
+
+    if from_schedule:
+        # 筛选
+        result = []
+        for curriculum in curriculums:
+            if curriculum.start_time.strftime("%H%M%S") >= localtime.strftime("%H%M%S"):
+                if timeLimit:
+                    if curriculum.start_time.strftime("%H%M%S") <= \
+                            (localtime + timedelta(minutes=timeLimit)).strftime("%H%M%S"):
+                        result.append(curriculum)
+                else:
+                    result.append(curriculum)
+        return result
+
     # 筛选
     result = []
-    for curriculum in curriculums:
+    for curriculum in curriculums_cpy:
         curriculum.group_name = [curriculum.group_name]
         if curriculum.start_time.strftime("%H%M%S") >= localtime.strftime("%H%M%S"):
             if timeLimit:
