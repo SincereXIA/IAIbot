@@ -54,10 +54,13 @@ async def add_group_info(group_id, group_name, last_weather_notify=None,
 
 async def update_last_weather_notify(group_id, last_weather_notify):
     session = DBSession()
-    group = session.query(GroupInfo).filter(GroupInfo.group_id == group_id).first()
-    group.last_weather_notify = last_weather_notify
-    session.merge(group)
-    session.commit()
+    try:
+        group = session.query(GroupInfo).filter(GroupInfo.group_id == group_id).first()
+        group.last_weather_notify = last_weather_notify
+        session.merge(group)
+        session.commit()
+    except Exception:
+        session.rollback()
     session.close()
 
 

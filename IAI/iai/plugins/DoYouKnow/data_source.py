@@ -28,7 +28,10 @@ async def get_do_you_know():
     session = DBSession()
     dyn = session.query(DoYouKnow).order_by(func.rand()).first()
     dyn.times += 1
-    session.merge(dyn)
+    try:
+        session.merge(dyn)
+    except Exception:
+        session.rollback()
     session.close()
     result = {}
     result['text'] = dyn.text

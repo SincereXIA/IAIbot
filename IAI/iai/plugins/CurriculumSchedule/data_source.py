@@ -49,6 +49,7 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
         Curriculum.end_week >= week,
         or_(*[Curriculum.class_num == i for i in classnums])
     ).order_by(Curriculum.class_num).order_by(Curriculum.group_name).all()
+    #session.rollback()
     session.close()
     if rs is not None:
         for r in rs:
@@ -77,6 +78,8 @@ def getClassInfo(week, weekday, group_id, classnums) -> list:
 
     if curriculums:
         merge_curriculums.append(curriculums[len(curriculums)-1])
+
+
     return merge_curriculums
 
 
@@ -94,6 +97,7 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
         Curriculum.begin_week <= week,
         Curriculum.end_week >= week,
     ).order_by(Curriculum.class_num, Curriculum.group_name).all()
+    #session.rollback()
     session.close()
 
     # 为未定义课程时间生成时间
@@ -132,6 +136,7 @@ async def getRecentClassInfo(recent_time: datetime, group_id, timeLimit=None):
 
     if result:
         merge_curriculums.append(result[len(result) - 1])
+
     return merge_curriculums
 
 
