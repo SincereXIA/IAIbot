@@ -11,7 +11,7 @@ from nonebot import scheduler
 from IAI.iai.common.GroupInfo import get_all_group_info
 
 
-@scheduler.scheduled_job('interval', seconds=10)
+@scheduler.scheduled_job('interval', minutes=5)
 async def Curriculum():
     now = datetime.now()
     for group in await get_all_group_info():
