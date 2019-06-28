@@ -24,6 +24,10 @@ async def tuling(session: CommandSession):
 
     # 通过封装的函数获取图灵机器人的回复
     reply = await call_tuling_api(session, message)
+
+    if reply == '请求次数超限制!':
+        reply = await  call_moli_api(session, message)
+
     if reply:
         # 如果调用图灵机器人成功，得到了回复，则转义之后发送给用户
         # 转义会把消息中的某些特殊字符做转换，以避免 酷Q 将它们理解为 CQ 码
@@ -39,6 +43,36 @@ async def _(session: NLPSession):
     # 以置信度 60.0 返回 tuling 命令
     # 确保任何消息都在且仅在其它自然语言处理器无法理解的时候使用 tuling 命令
     return IntentCommand(60.0, 'tuling', args={'message': session.msg_text})
+
+async def call_moli_api(session: CommandSession, text: str)-> Optional[str]:
+    # 调用茉莉机器人 API 获取回复
+    if not text:
+        return None
+
+    url = 'http://i.itpk.cn/api.php'
+
+    # 构造请求数据
+    payload = {
+        'question': text,
+        'limit': 8,
+        'api_key': session.bot.config.MOLI_API_KEY,
+        'api_secret': session.bot.config.MOLI_API_SECRET
+    }
+
+    result_msg = ""
+    try:
+        # 使用 aiohttp 库发送最终的请求
+        async with aiohttp.ClientSession() as sess:
+            async with sess.get(url, params=payload) as response:
+                if response.status != 200:
+                    # 如果 HTTP 响应状态码不是 200，说明调用失败
+                    return None
+                result_msg += await response.text()
+
+        return result_msg
+    except (aiohttp.ClientError, json.JSONDecodeError, KeyError):
+        # 抛出上面任何异常，说明调用失败
+        return None
 
 
 async def call_tuling_api(session: CommandSession, text: str) -> Optional[str]:

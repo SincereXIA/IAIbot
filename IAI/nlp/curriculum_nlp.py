@@ -1,3 +1,10 @@
+"""
+自然语言处理-curriculm
+对用户请求课表信息的自然语言理解
+
+author: 16030199025 张俊华
+"""
+
 from IAI.nlp import client
 from datetime import datetime
 from . import datetime_nlp

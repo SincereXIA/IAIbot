@@ -1,3 +1,9 @@
+"""
+自然语言处理-datetime
+对用户语言中的时间信息进行解析和提取
+
+author: 16030199025 张俊华
+"""
 from IAI.nlp import client
 from datetime import datetime, timedelta
 import jieba.posseg as pseg

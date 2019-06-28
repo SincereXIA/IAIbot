@@ -1,3 +1,10 @@
+"""
+IAIbot 初始化模块
+初始化系统，连接数据库，加载插件
+
+author: 16030199025 张俊华
+"""
+
 from os import path
 import sys
 import setup

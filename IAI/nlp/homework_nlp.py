@@ -1,3 +1,8 @@
+"""
+对作业查询功能的自然语言理解
+
+author: 16030199025 张俊华
+"""
 from IAI.nlp import client
 def get_subject_name(text):
     score = client.simnet(text,'作业是什么')
